@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La multiplicación por una cifra</title>
+    <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/ManuelVS8/Audios-juegos-SCIENCE/refs/heads/main/icono.ico">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --blue-dark:#04032B; --blue-700:#1a3a5f; --blue-600:#254fba;
+            --orange:#f59e42; --orange-700:#e67e22; --bg1:#1a3a5f; --bg2:#0d2340;
+            --white:#fff; --green:#2ecc71; --red:#e74c3c; --panel:#E8EAFF;
+            --success:#10b981; --danger:#ef4444;
+            --text-light:#6b7280; --shadow:0 12px 24px rgba(0,0,0,.12); --tr:180ms ease;
+        }
+        body {
+            font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+            background:linear-gradient(135deg,var(--bg1) 0%,var(--bg2) 100%);
+            min-height:100vh; display:flex; justify-content:center; align-items:flex-start;
+            padding:24px 20px;
+        }
+        .game-container { background:var(--white); border-radius:20px; box-shadow:0 16px 40px rgba(0,0,0,.18); padding:1.6rem; max-width:980px; width:100%; position:relative; display:flex; flex-direction:column; }
+        .screen { display:none; animation:fadeIn .4s ease; flex-direction:column; flex:1; width:100%; align-items:center; }
+        .screen.active { display:flex; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(15px)} to{opacity:1;transform:translateY(0)} }
+        h1 { color:var(--blue-dark); font-size:clamp(1.5rem,5vw,2.4rem); font-weight:900; text-align:center; margin-bottom:.4rem; }
+        h2 { color:var(--blue-dark); font-size:1.3rem; font-weight:700; margin-bottom:10px; text-align:center; }
+        .subtitle { color:var(--blue-700); font-size:clamp(.9rem,2.5vw,1.15rem); font-weight:600; text-align:center; margin-bottom:.8rem; }
+
+        /* Botones flotantes */
+        .fixed-sound-btn { position:absolute;top:1rem;right:1rem;background:linear-gradient(135deg,var(--orange),var(--orange-700));color:#fff;border:2px solid #fff;width:42px;height:42px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:100;box-shadow:0 4px 12px rgba(245,158,66,.3);transition:transform .2s ease,box-shadow .2s ease; }
+        .fixed-sound-btn:hover { transform:scale(1.12) rotate(8deg);box-shadow:0 6px 16px rgba(245,158,66,.45); }
+        .fixed-help-btn,.fixed-table-btn { position:absolute;top:1rem;width:42px;height:42px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--blue-700),var(--blue-600));border:2px solid #fff;border-radius:50%;color:#fff;cursor:pointer;z-index:100;box-shadow:0 4px 12px rgba(37,79,186,.3);transition:transform .2s ease,box-shadow .2s ease; }
+        .fixed-help-btn { left:1rem; }
+        .fixed-table-btn { left:4rem; }
+        .fixed-help-btn:hover,.fixed-table-btn:hover { transform:scale(1.12);box-shadow:0 6px 16px rgba(37,79,186,.45); }
+        .fixed-help-btn svg,.fixed-table-btn svg,.fixed-sound-btn svg { width:20px;height:20px; }
+
+        /* Botones */
+        .btn { color:#fff;border:none;border-radius:14px;cursor:pointer;font-weight:800;transition:transform .15s ease,box-shadow .25s ease,filter .2s ease;display:inline-flex;align-items:center;justify-content:center;font-size:1.1rem;font-family:inherit;box-shadow:0 4px 12px rgba(0,0,0,.12);letter-spacing:.3px; }
+        .btn:hover { transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,0,0,.2);filter:brightness(1.05); }
+        .btn:active { transform:translateY(-1px);box-shadow:0 3px 8px rgba(0,0,0,.15); }
+        .btn-start   { background:linear-gradient(135deg,var(--orange),var(--orange-700));margin:.5rem auto;padding:.7rem 2rem;height:52px;font-size:1.12rem;min-width:170px; }
+        .btn-primary { background:linear-gradient(135deg,var(--blue-600),#1d3f96);padding:.7rem 1.4rem;height:48px;font-size:1rem; }
+        .btn-success { background:linear-gradient(135deg,var(--green),#27ae60);padding:.7rem 1.4rem;height:48px;font-size:1rem; }
+        .btn-danger  { background:linear-gradient(135deg,var(--red),#c0392b);padding:.7rem 1.4rem;height:48px;font-size:1rem; }
+        .btn-orange  { background:linear-gradient(135deg,var(--orange),var(--orange-700));padding:.7rem 1.4rem;height:48px;font-size:1rem; }
+        .btn-lightblue { background:linear-gradient(135deg,#8ecae6,#5fb8dd);color:var(--blue-dark);padding:.7rem 1.4rem;height:48px;font-size:1rem; }
+        .btn-group   { display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:14px; }
+        @media (max-width:420px) { .btn { min-width:110px; } .btn-start { padding:.6rem 1.4rem;height:48px; } }
+
+        /* Inicio */
+        .start-content { display:flex;flex-direction:column;align-items:center;flex:1;padding:1rem .5rem;text-align:center;width:100%; }
+        .advice-box { background:var(--panel);border-left:5px solid var(--blue-700);padding:1.5rem 1.6rem;border-radius:14px;color:var(--blue-700);max-width:680px;font-size:1.08rem;line-height:1.7;margin-bottom:1.2rem;text-align:center;box-shadow:0 6px 18px rgba(4,3,43,.25); }
+        .advice-box .key,.advice-box strong { color:var(--orange);font-weight:800; }
+        .start-image-container { width:100%;display:flex;justify-content:center;margin-top:.5rem;padding-top:.5rem; }
+        .start-image { max-width:280px;width:100%;height:auto;border-radius:14px; }
+
+        /* Cabecera juego */
+        .game-header { margin-bottom:8px;display:flex;flex-direction:column;align-items:center;width:100%; }
+        .timer { font-weight:900;color:var(--blue-700);font-size:clamp(1rem,2.5vw,1.2rem);background:var(--panel);padding:6px 16px;border-radius:20px; }
+        .progress-bar { height:8px;background:#e6f2ff;border-radius:999px;overflow:hidden;width:100%;max-width:400px;border:1px solid #d3e2ff;margin:8px auto 4px; }
+        .progress-fill { height:100%;background:var(--orange);border-radius:999px;transition:width .3s; }
+        .progress-text { text-align:center;font-size:13px;color:var(--text-light);margin-bottom:4px;width:100%; }
+
+        /* Operación */
+        .operation-wrapper { display:flex;align-items:center;justify-content:center;margin:16px 0;width:100%;flex-wrap:wrap; }
+        .operation { display:flex;flex-direction:column;align-items:flex-end;font-family:'Courier New',monospace;font-size:1.6rem; }
+        .row { display:flex;gap:.3rem;margin-bottom:.1rem; }
+        .digit-box { width:2.6rem;height:2.6rem;display:flex;align-items:center;justify-content:center;position:relative;font-weight:bold;color:var(--blue-dark); }
+        .carry-mark { position:absolute;top:-1.2rem;left:50%;transform:translateX(-50%);color:var(--red);font-size:.9rem;font-weight:bold; }
+        .line { width:2.6rem;border-top:3px solid var(--blue-dark); }
+        .answer-box { width:2.6rem;height:2.6rem;display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:bold;border:2px solid #d1d5db;border-radius:.5rem;background:#f9fafb;transition:all .25s;cursor:pointer; }
+        .answer-box.current   { border-color:#a855f7;background:#faf5ff;transform:scale(1.08); }
+        .answer-box.filled    { border-color:var(--blue-600);background:#eef2ff; }
+        .answer-box.correct   { border-color:var(--success);background:rgba(16,185,129,.18);color:var(--success); }
+        .answer-box.incorrect { border-color:var(--danger);background:rgba(239,68,68,.18);color:var(--danger);animation:shake .45s ease; }
+        @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+
+        /* Línea reservada de la pregunta de llevada */
+        .carry-question-line { min-height:1.6em;text-align:center;font-size:1.05em;font-weight:900;color:var(--blue-dark); }
+
+        /* Banco */
+        .digit-bank { display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin:10px auto;width:100%;max-width:600px; }
+        .digit-btn { flex:1 1 auto;min-width:44px;height:54px;display:flex;align-items:center;justify-content:center;background:var(--white);border:2px solid #e5e9f0;border-radius:14px;font-size:24px;font-weight:700;cursor:pointer;transition:all var(--tr);font-family:inherit;color:var(--blue-700);box-shadow:0 2px 6px rgba(0,0,0,.06); }
+        .digit-btn:hover { background:linear-gradient(135deg,var(--blue-600),#1d3f96);color:#fff;border-color:var(--blue-600);transform:translateY(-3px);box-shadow:0 6px 14px rgba(37,79,186,.3); }
+        .digit-btn:active { transform:translateY(-1px); }
+        @media (max-width:560px) {
+            .digit-bank { gap:6px; }
+            .digit-btn  { flex:0 0 calc(20% - 6px);height:52px;font-size:22px; }
+        }
+
+        /* Feedback */
+        .feedback { margin:8px 0;padding:12px;border-radius:12px;font-size:.95em;font-weight:700;text-align:center;width:100%;max-width:500px;display:none; }
+        .feedback.show    { display:block;animation:fadeIn .3s ease; }
+        .feedback.success { background:rgba(46,204,113,.15);border:3px solid var(--green);color:#1a8a4a; }
+        .feedback.error   { background:rgba(231,76,60,.15);border:3px solid var(--red);color:var(--red); }
+
+        /* Modal (ayuda / tabla) */
+        .modal { position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:1000; }
+        .modal.active { display:flex;animation:fadeIn .3s ease; }
+        .modal-content { background:var(--white);border-radius:16px;padding:22px;max-width:90%;width:440px;max-height:85vh;overflow-y:auto; }
+        .modal-header { display:flex;justify-content:space-between;align-items:center;margin-bottom:14px; }
+        .modal-header h2 { margin-bottom:0;text-align:left; }
+        .modal-close { background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-light); }
+        .help-content p,.help-steps li { margin-bottom:9px;color:#334155;font-size:.93em; }
+        .help-steps ol { margin-left:20px;margin-bottom:16px; }
+        .magnitude-highlight { color:var(--orange);font-weight:800; }
+        .highlight-note { color:var(--orange);font-weight:700;text-align:center;margin-top:12px !important; }
+        .times-table { width:100%;border-collapse:collapse;font-size:1.1em;font-family:'Courier New',monospace; }
+        .times-table td { padding:8px 6px;border-bottom:1px solid #e5e7eb;text-align:center;color:var(--blue-dark); }
+        .times-table tr:last-child td { border-bottom:none; }
+        .times-table td.result { font-weight:900;color:var(--blue-600); }
+
+        /* Manual */
+        .input-group { margin-bottom:16px;width:100%;max-width:380px; }
+        .input-group label { display:block;margin-bottom:6px;font-weight:700;color:var(--blue-dark);font-size:.95rem; }
+        .input-group input { width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:10px;font-size:1.15em;font-family:inherit;text-align:center; }
+        .input-group input:focus { outline:none;border-color:var(--blue-600); }
+        .input-group input::placeholder { color:#9ca3af; }
+        .manual-error { color:var(--red);font-weight:700;margin-bottom:8px;text-align:center;min-height:1.3em;font-size:.9rem; }
+
+        /* Hall of Fame */
+        .hall-of-fame { background:var(--panel);border-radius:12px;padding:1rem;margin-top:1.2rem;width:100%;max-width:600px; }
+        .hall-of-fame-title { color:var(--blue-700);font-weight:800;font-size:1.15rem;text-align:center;margin-bottom:.7rem; }
+        .hall-of-fame-table { width:100%;border-collapse:collapse;font-size:.9rem; }
+        .hall-of-fame-table th { background:var(--blue-600);color:white;padding:.5rem;text-align:left; }
+        .hall-of-fame-table td { padding:.4rem .5rem;border-bottom:1px solid #ddd; }
+        .hall-of-fame-table tr:last-child td { border-bottom:none; }
+        .hall-of-fame-table tr:nth-child(even) { background-color:rgba(255,255,255,.5); }
+        .hall-of-fame-error,.hall-of-fame-loading { padding:1rem;text-align:center;color:var(--blue-700);font-style:italic; }
+        .hall-of-fame-error { color:var(--red); }
+
+        /* Modal de envío de puntuación */
+        .modal-overlay { position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:999; }
+        .modal-overlay.active { display:flex; }
+        .modal-input { width:100%;padding:10px;margin:10px 0;border:2px solid #ddd;border-radius:8px;font-size:1rem;font-family:inherit; }
+        .modal-validation-msg { color:var(--red);font-size:.9rem;font-weight:700;margin:-4px 0 10px;text-align:center; }
+        .modal-validation-msg.hidden { display:none; }
+        @keyframes shakeAnim { 0%,100%{transform:translateX(0);} 20%{transform:translateX(-5px);} 40%{transform:translateX(5px);} 60%{transform:translateX(-5px);} 80%{transform:translateX(5px);} }
+        .shake { animation:shakeAnim .4s ease; }
+
+        /* Final */
+        .final-screen .results { display:flex;flex-direction:column;align-items:center;gap:.8rem;text-align:center;flex:1;justify-content:center;padding:1rem;width:100%; }
+        .trophy { display:none;font-size:5rem;animation:bounce 1s ease infinite; }
+        .trophy.show { display:block; }
+        @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-18px)} }
+        .final-score { font-size:clamp(3rem,8vw,4.5rem);color:var(--blue-600);font-weight:900; }
+        .final-time { font-size:1.2rem;color:var(--blue-700);font-weight:600; }
+        .final-message { font-size:clamp(1rem,3vw,1.4rem);font-weight:800;color:var(--blue-700); }
+        .credit { font-weight:700;color:#555;font-size:.88rem; }
+        .school-logo { width:150px;max-width:28%;height:auto;border-radius:8px; }
+        .confetti { position:fixed;width:10px;height:10px;border-radius:50%;animation:cfall 3s linear forwards;z-index:999;pointer-events:none; }
+        @keyframes cfall { 0%{transform:translate(0,-10px) rotate(0);opacity:1} 100%{transform:translate(var(--tx),var(--ty)) rotate(360deg);opacity:0} }
+    </style>
+</head>
+<body>
+<div class="game-container">
+
+    <!-- ══ INICIO ══ -->
+    <div id="startScreen" class="screen active">
+        <header>
+            <h1>La multiplicación por una cifra</h1>
+            <div class="subtitle">Practica la multiplicación por una cifra y aprende jugando</div>
+        </header>
+        <div class="start-content">
+            <div class="advice-box">
+                Recuerda que en la multiplicación vamos <span class="key">de derecha a izquierda</span>. Si tienes dudas, pulsa el botón de ayuda durante el juego.
+                <br><strong>¡Buena suerte!</strong>
+            </div>
+            <div class="btn-group">
+                <button id="startBtn" class="btn btn-start" onclick="startGame()">Comenzar</button>
+                <button id="manualBtn" class="btn btn-start" style="background:var(--blue-600);" onclick="showManualSetup()">Manual</button>
+            </div>
+            <div class="start-image-container">
+                <img src="https://raw.githubusercontent.com/ManuelVS8/Efectos_audio/refs/heads/main/Ni%C3%B1os.png" alt="Niños estudiando" class="start-image">
+            </div>
+            <div class="hall-of-fame" id="hallOfFame">
+                <div class="hall-of-fame-title">🏆 Mejores puntuaciones 🏆</div>
+                <table class="hall-of-fame-table">
+                    <thead>
+                        <tr>
+                            <th>Posición</th>
+                            <th>Nombre</th>
+                            <th>Puntos</th>
+                            <th>Tiempo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="hofTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ MANUAL ══ -->
+    <div id="manualScreen" class="screen">
+        <header><h1>Modo Manual</h1></header>
+        <div class="start-content">
+            <div class="input-group">
+                <label for="inpMultiplicand">Multiplicando (4 cifras: 1000 – 9999)</label>
+                <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" id="inpMultiplicand" placeholder="Ej: 3247">
+            </div>
+            <div class="input-group">
+                <label for="inpMultiplier">Multiplicador (1 cifra: 2 – 9)</label>
+                <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" id="inpMultiplier" placeholder="Ej: 6">
+            </div>
+            <div class="manual-error" id="manualError"></div>
+            <div class="btn-group">
+                <button class="btn btn-start" style="background:var(--green);" onclick="startManual()">Empezar</button>
+                <button class="btn btn-start" style="background:var(--blue-600);" onclick="goToStartFromManual()">Atrás</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ JUEGO ══ -->
+    <div id="gameScreen" class="screen">
+        <button id="fixedHelpBtn" class="fixed-help-btn" aria-label="Ayuda" onclick="toggleHelpModal()">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+        </button>
+        <button id="fixedTableBtn" class="fixed-table-btn" aria-label="Tabla de multiplicar" onclick="toggleTableModal()">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                <line x1="3" y1="9" x2="21" y2="9"></line>
+                <line x1="3" y1="15" x2="21" y2="15"></line>
+                <line x1="9" y1="3" x2="9" y2="21"></line>
+                <line x1="15" y1="3" x2="15" y2="21"></line>
+            </svg>
+        </button>
+        <button id="fixedSoundBtn" class="fixed-sound-btn" aria-label="Activar sonido" onclick="toggleSound()">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            </svg>
+        </button>
+
+        <header style="margin-top:2.8rem;">
+            <h1 id="questionTitle">Realiza la siguiente multiplicación</h1>
+        </header>
+
+        <div class="game-header">
+            <div id="timer" class="timer">00:00.00</div>
+            <div id="normalProgress" class="progress-text" style="display:none;">1/3</div>
+            <div id="normalProgressBar" class="progress-bar" style="display:none;">
+                <div class="progress-fill" id="progressFill" style="width:33.33%"></div>
+            </div>
+        </div>
+
+        <div class="operation-wrapper">
+            <div class="operation">
+                <div id="multiplicandRow" class="row"></div>
+                <div id="multiplierRow" class="row"></div>
+                <div id="lineRow" class="row"></div>
+                <div id="answerRow" class="row"></div>
+            </div>
+        </div>
+
+        <!-- Línea reservada para "¿Cuántas te llevas?" (evita saltos de layout) -->
+        <div id="carryQuestionLine" class="carry-question-line"></div>
+
+        <div class="digit-bank" id="digitBank"></div>
+
+        <div class="btn-group">
+            <button id="deleteBtn" class="btn btn-orange" onclick="backspace()">Borrar</button>
+            <button id="checkBtn" class="btn btn-primary" style="display:none;" onclick="checkAnswer()">Comprobar</button>
+            <button id="continueBtn" class="btn btn-success" style="display:none;" onclick="nextQuestion()">Continuar</button>
+        </div>
+
+        <div id="feedback" class="feedback" aria-live="polite"></div>
+    </div>
+
+    <!-- ══ FINAL ══ -->
+    <div id="finalScreen" class="screen final-screen">
+        <header><h1>La multiplicación por una cifra</h1></header>
+        <div class="results">
+            <div id="trophyContainer" class="trophy">🏆</div>
+            <div class="final-score" id="finalScore">0</div>
+            <div class="final-time" id="finalTime">Tiempo: 00:00.00</div>
+            <p class="final-message" id="finalMessage"></p>
+            <div class="btn-group">
+                <button id="restartBtn" class="btn btn-start" onclick="restartGame()">Volver al menú</button>
+            </div>
+            <p class="credit">Creado por Manuel J. Ventura</p>
+            <img src="https://raw.githubusercontent.com/ManuelVS8/Efectos_audio/refs/heads/main/Siurot.png" alt="Logo del colegio" class="school-logo">
+        </div>
+    </div>
+
+</div><!-- /game-container -->
+
+    <!-- Modal de ayuda -->
+    <div id="helpModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>¿Cómo multiplicar por una cifra?</h2>
+                <button class="modal-close" id="closeHelpModal" onclick="toggleHelpModal()">&times;</button>
+            </div>
+            <div class="help-content">
+                <div class="help-steps">
+                    <ol>
+                        <li>Empieza por la derecha.</li>
+                        <li>Multiplica el factor de abajo por la cifra de arriba.</li>
+                        <li>Si el resultado es un número <span class="magnitude-highlight">mayor de 10</span>, colocas la última cifra y te llevas la cifra de las decenas (<span class="magnitude-highlight">la de delante</span>).</li>
+                        <li>Coloca las llevadas arriba en la siguiente columna.</li>
+                        <li>Cuando multipliques la siguiente cifra, recuerda <span class="magnitude-highlight">sumar las que te llevas al resultado</span>.</li>
+                    </ol>
+                    <p class="highlight-note">¡Comprueba tu respuesta al final!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de la tabla de multiplicar de ayuda -->
+    <div id="tableModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="tableModalTitle">Tabla del 2</h2>
+                <button class="modal-close" onclick="toggleTableModal()">&times;</button>
+            </div>
+            <div id="tableModalContent"></div>
+        </div>
+    </div>
+
+    <!-- Modal de envío de puntuación (Hall of Fame) -->
+    <div class="modal-overlay" id="submitModal">
+        <div class="modal-content" style="text-align:center;">
+            <h2 id="modalTitle">¡Juego terminado!</h2>
+            <p id="modalTimeLabel">Tu tiempo: <span id="modalTime">00:00.00</span></p>
+            <input class="modal-input" id="playerName" placeholder="Nombre" maxlength="15">
+            <input class="modal-input" id="playerSurname" placeholder="Apellido" maxlength="15">
+            <p id="modalValidationMsg" class="modal-validation-msg hidden"></p>
+            <div class="btn-group">
+                <button class="btn btn-orange" id="submitScoreBtn" onclick="submitScore()">Guardar</button>
+                <button class="btn btn-lightblue" id="discardScoreBtn" onclick="discardScore()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuración del juego
+        const SHEET_NAME = "Multiplicar_1Cifra";
+        const APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxYNz7wXhyUFzbEMoS1023ubcqPYrs1FDnlfAw8mFzd2JPIh52FZedik_oZNGkP4LaE/exec";
+        var DIGITS_MULTIPLICAND = 4;
+        var multiplicand = '';
+        var multiplier = '';
+        var userAnswer = {};
+        var carries = {};
+        var currentColumn = 0;
+        var showCarryQuestion = false;
+        var gameStarted = false;
+        var isChecked = false;
+        var manualFixedOperation = null; // {multiplicand, multiplier} cuando viene del modo Manual
+        var lastElapsedSeconds = 0;
+        var isSubmittingScore = false;
+        var isHofLoading = false;
+        var gameState = {
+            questions: [],
+            currentQuestionIndex: 0,
+            totalQuestions: 1,
+            score: 0,
+            startTime: null,
+            timerInterval: null,
+            soundEnabled: true,
+            audioInitialized: false,
+            gameMode: 'normal'
+        };
+
+        // Elementos del DOM
+        const elements = {
+            startScreen: document.getElementById('startScreen'),
+            manualScreen: document.getElementById('manualScreen'),
+            gameScreen: document.getElementById('gameScreen'),
+            finalScreen: document.getElementById('finalScreen'),
+            startBtn: document.getElementById('startBtn'),
+            helpModal: document.getElementById('helpModal'),
+            closeHelpModal: document.getElementById('closeHelpModal'),
+            questionTitle: document.getElementById('questionTitle'),
+            multiplicandRow: document.getElementById('multiplicandRow'),
+            multiplierRow: document.getElementById('multiplierRow'),
+            lineRow: document.getElementById('lineRow'),
+            answerRow: document.getElementById('answerRow'),
+            digitBank: document.getElementById('digitBank'),
+            carryQuestionLine: document.getElementById('carryQuestionLine'),
+            deleteBtn: document.getElementById('deleteBtn'),
+            checkBtn: document.getElementById('checkBtn'),
+            continueBtn: document.getElementById('continueBtn'),
+            fixedSoundBtn: document.getElementById('fixedSoundBtn'),
+            fixedHelpBtn: document.getElementById('fixedHelpBtn'),
+            fixedTableBtn: document.getElementById('fixedTableBtn'),
+            feedback: document.getElementById('feedback'),
+            progressText: document.getElementById('normalProgress'),
+            progressFill: document.getElementById('progressFill'),
+            normalProgressBar: document.getElementById('normalProgressBar'),
+            normalProgress: document.getElementById('normalProgress'),
+            timer: document.getElementById('timer'),
+            finalScore: document.getElementById('finalScore'),
+            finalTime: document.getElementById('finalTime'),
+            finalMessage: document.getElementById('finalMessage'),
+            restartBtn: document.getElementById('restartBtn'),
+            trophyContainer: document.getElementById('trophyContainer'),
+            tableModal: document.getElementById('tableModal'),
+            tableModalTitle: document.getElementById('tableModalTitle'),
+            tableModalContent: document.getElementById('tableModalContent'),
+            submitModal: document.getElementById('submitModal'),
+            hofTableBody: document.getElementById('hofTableBody')
+        };
+
+        // Sistema de sonido con enlaces corregidos
+        const Sounds = {
+            audioContext: null,
+            sounds: {},
+            
+            init() {
+                // Corregimos los enlaces para usar raw.githubusercontent.com
+                this.sounds = {
+                    correct: new Audio('https://raw.githubusercontent.com/ManuelVS8/Efectos_audio/7b86808e254100aeaba6285b3e0b82650ae78055/Correcto.mp3'),
+                    error: new Audio('https://raw.githubusercontent.com/ManuelVS8/Efectos_audio/7b86808e254100aeaba6285b3e0b82650ae78055/Error.mp3'),
+                    completed: new Audio('https://raw.githubusercontent.com/ManuelVS8/Efectos_audio/7b86808e254100aeaba6285b3e0b82650ae78055/Completado.mp3'),
+                    victory: new Audio('https://raw.githubusercontent.com/ManuelVS8/Efectos_audio/7b86808e254100aeaba6285b3e0b82650ae78055/Termin%C3%A9.mp3'),
+                    tap: new Audio('https://raw.githubusercontent.com/ManuelVS8/Efectos_audio/37b3eb2da9c15c04dfb71dfe1be60f088ea3cdfc/Tap.mp3')
+                };
+
+                Object.values(this.sounds).forEach(audio => {
+                    audio.preload = 'auto';
+                    audio.volume = 0.7;
+                });
+
+                console.log("Sistema de audio inicializado");
+            },
+
+            initAudioContext() {
+                if (!this.audioContext) {
+                    try {
+                        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                        console.log("AudioContext creado:", this.audioContext.state);
+                    } catch (e) {
+                        console.error("Error al crear AudioContext:", e);
+                    }
+                }
+
+                if (this.audioContext && this.audioContext.state === 'suspended') {
+                    this.audioContext.resume().then(() => {
+                        console.log("AudioContext reanudado exitosamente");
+                        gameState.audioInitialized = true;
+                    }).catch(e => {
+                        console.error("Error al reanudar AudioContext:", e);
+                    });
+                } else {
+                    gameState.audioInitialized = true;
+                }
+            },
+
+            play(soundName) {
+                if (!gameState.soundEnabled) return;
+
+                if (!gameState.audioInitialized) {
+                    this.initAudioContext();
+                }
+
+                const audio = this.sounds[soundName];
+                if (!audio) {
+                    console.error(`Sonido '${soundName}' no encontrado`);
+                    return;
+                }
+
+                audio.currentTime = 0;
+                audio.play()
+                    .then(() => {
+                        console.log(`Sonido '${soundName}' reproducido correctamente`);
+                    })
+                    .catch(e => {
+                        console.warn(`No se pudo reproducir '${soundName}':`, e.message);
+                        this.initAudioContext();
+                    });
+            }
+        };
+
+        // Funciones específicas para reproducir sonidos según las condiciones solicitadas
+        function reproducirSonidoCorrecto() {
+            Sounds.play('correct');
+        }
+
+        function reproducirSonidoError() {
+            Sounds.play('error');
+        }
+
+        function reproducirSonidoTap() {
+            Sounds.play('tap');
+        }
+
+        function reproducirSonidoVictoria() {
+            Sounds.play('victory');
+        }
+
+        function unlockAudio() {
+            if (!gameState.audioInitialized) {
+                Sounds.initAudioContext();
+            }
+        }
+
+        document.addEventListener('click', unlockAudio, { once: true });
+        document.addEventListener('touchstart', unlockAudio, { once: true });
+        document.addEventListener('keydown', unlockAudio, { once: true });
+
+        function generateRandomNumber(digits) {
+            var min = Math.pow(10, digits - 1);
+            var max = Math.pow(10, digits) - 1;
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function generateMultiplicationWithCarries() {
+            var num1, num2;
+            var hasCarry = false;
+            var attempts = 0;
+            var carryCount = 0;
+
+            while ((carryCount < 2 || !hasCarry) && attempts < 100) {
+                num1 = generateRandomNumber(DIGITS_MULTIPLICAND);
+                num2 = Math.floor(Math.random() * 8) + 2; // Multiplicador de 2 a 9
+
+                // NUEVA CONDICIÓN: Comprobar si el multiplicando tiene dígitos únicos
+                var num1Str = num1.toString();
+                var hasUniqueDigits = new Set(num1Str).size === num1Str.length;
+                if (!hasUniqueDigits) {
+                    attempts++;
+                    continue; // Si no tiene dígitos únicos, volver a generar
+                }
+
+                var mStr = num1.toString();
+                hasCarry = false;
+                carryCount = 0;
+                var currentCarry = 0;
+
+                for (var i = DIGITS_MULTIPLICAND - 1; i >= 0; i--) {
+                    var product = parseInt(mStr[i]) * num2 + currentCarry;
+                    
+                    if (product >= 10) {
+                        hasCarry = true;
+                        carryCount++;
+                        currentCarry = Math.floor(product / 10);
+                    } else {
+                        currentCarry = 0;
+                    }
+                }
+                attempts++;
+            }
+
+            multiplicand = num1.toString();
+            multiplier = num2.toString();
+
+            if (carryCount < 2) {
+                multiplicand = '9876'; // '9876' has unique digits
+                multiplier = '9';
+            }
+        }
+
+        function generateNewOperation() {
+            if (manualFixedOperation) {
+                multiplicand = manualFixedOperation.multiplicand;
+                multiplier = manualFixedOperation.multiplier;
+            } else {
+                generateMultiplicationWithCarries();
+            }
+            reset();
+            updateTableModalContent();
+        }
+
+        function init() {
+            generateNewOperation(); 
+            renderNumberBank();
+            Sounds.init();
+            loadHallOfFame();
+            preloadImages();
+        }
+
+        // Precarga en segundo plano de las imágenes usadas (portada y logo)
+        function preloadImages() {
+            var urls = [
+                'https://raw.githubusercontent.com/ManuelVS8/Efectos_audio/refs/heads/main/Ni%C3%B1os.png',
+                'https://raw.githubusercontent.com/ManuelVS8/Efectos_audio/refs/heads/main/Siurot.png'
+            ];
+            urls.forEach(function(url) {
+                var img = new Image();
+                img.src = url;
+            });
+        }
+
+        function toggleHelpModal() {
+            elements.helpModal.classList.toggle('active');
+            reproducirSonidoTap();
+        }
+
+        function renderOperation() {
+            var product = parseInt(multiplicand) * parseInt(multiplier);
+            var productStr = product.toString();
+            var numDigits = productStr.length;
+
+            // Multiplicando
+            var multiplicandRow = elements.multiplicandRow;
+            multiplicandRow.innerHTML = '';
+            var paddedMultiplicand = multiplicand.padStart(numDigits, ' ');
+            for (var i = 0; i < numDigits; i++) {
+                var div = document.createElement('div');
+                div.className = 'digit-box';
+                div.textContent = paddedMultiplicand[i];
+                multiplicandRow.appendChild(div);
+            }
+
+            // Multiplicador
+            var multiplierRow = elements.multiplierRow;
+            multiplierRow.innerHTML = '';
+            var paddedMultiplier = multiplier.padStart(numDigits, ' ');
+            for (var i = 0; i < numDigits; i++) {
+                var div = document.createElement('div');
+                div.className = 'digit-box';
+                if (i === numDigits - 1) {
+                    div.textContent = '×' + paddedMultiplier[i];
+                } else {
+                    div.textContent = paddedMultiplier[i];
+                }
+                multiplierRow.appendChild(div);
+            }
+
+            // Línea
+            var lineRow = elements.lineRow;
+            lineRow.innerHTML = '';
+            for (var i = 0; i < numDigits; i++) {
+                var div = document.createElement('div');
+                div.className = 'line';
+                lineRow.appendChild(div);
+            }
+
+            // Respuesta
+            var answerRow = elements.answerRow;
+            answerRow.innerHTML = '';
+            for (var i = 0; i < numDigits; i++) {
+                var reverseIdx = numDigits - 1 - i;
+                var div = document.createElement('div');
+                div.className = 'answer-box';
+                div.id = 'ans-' + i;
+                
+                if (currentColumn === reverseIdx && gameStarted && !isChecked) {
+                    div.classList.add('current');
+                }
+                
+                if (userAnswer[reverseIdx] !== undefined) {
+                    div.textContent = userAnswer[reverseIdx];
+                    div.classList.add('filled');
+                    if (!isChecked) { 
+                        div.onclick = (function(idx) {
+                            return function() {
+                                deleteAnswer(idx);
+                                reproducirSonidoTap();
+                            };
+                        })(reverseIdx);
+                    }
+                }
+                
+                answerRow.appendChild(div);
+            }
+
+            // Añadir llevadas encima del multiplicando
+            var multiplicandBoxes = elements.multiplicandRow.querySelectorAll('.digit-box');
+            for (var i = 0; i < numDigits; i++) {
+                var reverseIdx = numDigits - 1 - i;
+                if (carries[reverseIdx] && carries[reverseIdx] > 0) {
+                    var carry = document.createElement('span');
+                    carry.className = 'carry-mark';
+                    carry.textContent = carries[reverseIdx];
+                    multiplicandBoxes[i].appendChild(carry);
+                }
+            }
+
+            updateUI();
+        }
+
+        // Orden del banco de números: 1,2,3,4,5,6,7,8,9,0
+        var BANK_ORDER = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
+
+        function renderNumberBank() {
+            var numbers = elements.digitBank;
+            numbers.innerHTML = '';
+            
+            var screenWidth = window.innerWidth;
+            var needsTwoLines = screenWidth < 400;
+            
+            if (needsTwoLines) {
+                var firstRow = document.createElement('div');
+                firstRow.style.display = 'flex';
+                firstRow.style.justifyContent = 'center';
+                firstRow.style.gap = '10px';
+                firstRow.style.marginBottom = '10px';
+                firstRow.style.width = '100%';
+                
+                var secondRow = document.createElement('div');
+                secondRow.style.display = 'flex';
+                secondRow.style.justifyContent = 'center';
+                secondRow.style.gap = '10px';
+                secondRow.style.width = '100%';
+                
+                for (var i = 0; i <= 4; i++) {
+                    var btn = document.createElement('button');
+                    btn.className = 'digit-btn';
+                    btn.textContent = BANK_ORDER[i];
+                    btn.onclick = (function(num) {
+                        return function() {
+                            handleDigitBankClick(num);
+                        };
+                    })(BANK_ORDER[i]);
+                    firstRow.appendChild(btn);
+                }
+                
+                for (var i = 5; i <= 9; i++) {
+                    var btn = document.createElement('button');
+                    btn.className = 'digit-btn';
+                    btn.textContent = BANK_ORDER[i];
+                    btn.onclick = (function(num) {
+                        return function() {
+                            handleDigitBankClick(num);
+                        };
+                    })(BANK_ORDER[i]);
+                    secondRow.appendChild(btn);
+                }
+                
+                numbers.appendChild(firstRow);
+                numbers.appendChild(secondRow);
+            } else {
+                for (var i = 0; i <= 9; i++) {
+                    var btn = document.createElement('button');
+                    btn.className = 'digit-btn';
+                    btn.textContent = BANK_ORDER[i];
+                    btn.onclick = (function(num) {
+                        return function() {
+                            handleDigitBankClick(num);
+                        };
+                    })(BANK_ORDER[i]);
+                    numbers.appendChild(btn);
+                }
+            }
+        }
+
+        // Punto de entrada único del banco de números: decide si el toque
+        // responde a una casilla de la operación o a la pregunta de llevada.
+        function handleDigitBankClick(num) {
+            if (showCarryQuestion) {
+                handleCarry(num);
+            } else {
+                handleNumberClick(num);
+            }
+        }
+
+        function handleNumberClick(num) {
+            if (isChecked) return;
+            if (!gameStarted) {
+                gameStarted = true;
+            }
+            
+            var product = parseInt(multiplicand) * parseInt(multiplier);
+            var numDigits = product.toString().length;
+            if (currentColumn >= numDigits) return; 
+
+            elements.feedback.classList.remove('show');
+            
+            userAnswer[currentColumn] = num;
+
+            // LÓGICA CORREGIDA PARA LA VENTANA DE LLEVADAS
+            // Obtenemos el número de dígitos del resultado final para tomar decisiones
+            var numDigits = product.toString().length;
+
+            if (currentColumn === numDigits - 1) {
+                // 1. Siempre que estemos en la última columna, simplemente avanzamos.
+                currentColumn++;
+            } else if (numDigits === 5 && currentColumn === 3) {
+                // 2. Caso especial: Es la columna de miles de un resultado de 5 cifras.
+                // No preguntamos la llevada, simplemente avanzamos a la última casilla.
+                currentColumn++;
+            } else {
+                // 3. En cualquier otro caso (unidades, decenas, centenas para 4 y 5 cifras),
+                // preguntamos por la llevada sobre el propio banco (sin ventana emergente).
+                showCarryQuestion = true;
+                showCarryQuestionLine();
+            }
+            
+            reproducirSonidoTap();
+            renderOperation();
+        }
+
+        function showCarryQuestionLine() {
+            elements.carryQuestionLine.textContent = '¿Cuántas te llevas?';
+        }
+
+        function hideCarryQuestionLine() {
+            elements.carryQuestionLine.textContent = '';
+        }
+
+        function handleCarry(carryAmount) {
+            if (isChecked) return;
+            
+            hideCarryQuestionLine();
+            
+            if (carryAmount > 0) {
+                var nextColumn = currentColumn + 1;
+                carries[nextColumn] = carryAmount;
+            } else {
+                delete carries[currentColumn + 1];
+            }
+            
+            showCarryQuestion = false;
+            currentColumn++;
+            
+            reproducirSonidoTap();
+            renderOperation();
+        }
+
+        function deleteAnswer(idx) {
+            if (isChecked) return;
+            
+            delete userAnswer[idx];
+            delete carries[idx + 1];
+            currentColumn = idx;
+            showCarryQuestion = false;
+            hideCarryQuestionLine();
+            isChecked = false;
+            elements.feedback.classList.remove('show');
+            reproducirSonidoTap();
+            renderOperation();
+        }
+
+        function backspace() {
+            if (isChecked) return;
+            
+            var product = parseInt(multiplicand) * parseInt(multiplier);
+            var numDigits = product.toString().length;
+            for (var i = numDigits - 1; i >= 0; i--) {
+                if (userAnswer[i] !== undefined) {
+                    deleteAnswer(i);
+                    break;
+                }
+            }
+        }
+
+        function checkAnswer() {
+            var correctAnswerNum = parseInt(multiplicand) * parseInt(multiplier);
+            var correctAnswer = correctAnswerNum.toString();
+            var numDigits = correctAnswer.length;
+            
+            var userResult = '';
+            for (let i = 0; i < numDigits; i++) {
+                var columnIdx = numDigits - 1 - i;
+                if (userAnswer[columnIdx] === undefined) {
+                    elements.feedback.textContent = 'Asegúrate de completar todos los dígitos antes de comprobar.';
+                    elements.feedback.className = 'feedback error show';
+                    isChecked = false;
+                    updateUI();
+                    return;
+                }
+                userResult += userAnswer[columnIdx];
+            }
+            
+            var answerBoxes = document.querySelectorAll('.answer-box');
+            
+            for (let i = 0; i < numDigits; i++) {
+                var columnIdx = numDigits - 1 - i;
+                var answerBox = document.getElementById('ans-' + i);
+                
+                if (userAnswer[columnIdx] == correctAnswer[i]) {
+                    answerBox.classList.add('correct');
+                } else {
+                    answerBox.classList.add('incorrect');
+                }
+            }
+
+            elements.checkBtn.style.display = 'none';
+            elements.deleteBtn.style.display = 'none';
+
+            if (userResult === correctAnswer) {
+                elements.feedback.textContent = `Correcto: ${correctAnswerNum}`;
+                elements.feedback.className = 'feedback success show';
+                reproducirSonidoCorrecto();
+                gameState.score += (100 / gameState.totalQuestions);
+            } else {
+                elements.feedback.textContent = `Incorrecto: ${correctAnswerNum}`;
+                elements.feedback.className = 'feedback error show';
+                reproducirSonidoError();
+            }
+            
+            elements.continueBtn.style.display = 'flex';
+            
+            isChecked = true;
+            renderOperation(); 
+            updateUI();
+        }
+
+        function reset() {
+            userAnswer = {};
+            carries = {};
+            currentColumn = 0;
+            showCarryQuestion = false;
+            gameStarted = false;
+            isChecked = false;
+            elements.feedback.classList.remove('show');
+            hideCarryQuestionLine();
+            
+            var answerBoxes = document.querySelectorAll('.answer-box');
+            answerBoxes.forEach(box => {
+                box.classList.remove('correct', 'incorrect');
+            });
+            
+            elements.digitBank.style.display = 'flex';
+            
+            elements.checkBtn.style.display = 'none';
+            elements.deleteBtn.style.display = 'flex';
+            
+            elements.continueBtn.style.display = 'none';
+            
+            renderOperation();
+        }
+
+        function updateUI() {
+            var product = parseInt(multiplicand) * parseInt(multiplier);
+            var numDigits = product.toString().length;
+            var filledCount = Object.keys(userAnswer).length;
+            var allFilled = filledCount === numDigits && !showCarryQuestion;
+
+            if (isChecked) {
+                elements.checkBtn.style.display = 'none';
+                elements.continueBtn.style.display = 'flex';
+            } else {
+                elements.checkBtn.style.display = allFilled ? 'flex' : 'none';
+                elements.continueBtn.style.display = 'none';
+            }
+        }
+
+        function updateGameHeader() {
+            elements.timer.style.display = 'block';
+        }
+
+        function startGame() {
+            reproducirSonidoTap();
+            
+            manualFixedOperation = null;
+            gameState.questions = [];
+            gameState.currentQuestionIndex = 0;
+            gameState.totalQuestions = 1;
+            gameState.score = 0;
+            gameState.startTime = Date.now();
+            gameState.gameMode = 'normal';
+            
+            if (gameState.timerInterval) {
+                clearInterval(gameState.timerInterval);
+            }
+            
+            gameState.timerInterval = setInterval(updateTimer, 30);
+            
+            elements.startScreen.classList.remove('active');
+            elements.gameScreen.classList.add('active');
+            
+            elements.fixedSoundBtn.style.display = 'flex';
+            elements.fixedHelpBtn.style.display = 'flex';
+            elements.fixedTableBtn.style.display = 'flex';
+            
+            updateGameHeader();
+            
+            elements.normalProgress.style.display = 'none';
+            elements.normalProgressBar.style.display = 'none';
+            
+            elements.questionTitle.textContent = 'Realiza la siguiente multiplicación';
+            
+            generateNewOperation();
+        }
+
+        // ── Modo Manual ──
+        function showManualSetup() {
+            reproducirSonidoTap();
+            document.getElementById('inpMultiplicand').value = '';
+            document.getElementById('inpMultiplier').value = '';
+            document.getElementById('manualError').textContent = '';
+            elements.startScreen.classList.remove('active');
+            elements.manualScreen.classList.add('active');
+        }
+
+        function goToStartFromManual() {
+            reproducirSonidoTap();
+            elements.manualScreen.classList.remove('active');
+            elements.startScreen.classList.add('active');
+        }
+
+        function startManual() {
+            reproducirSonidoTap();
+            
+            var mStr = document.getElementById('inpMultiplicand').value.trim();
+            var pStr = document.getElementById('inpMultiplier').value.trim();
+            var m = parseInt(mStr, 10);
+            var p = parseInt(pStr, 10);
+            var err = document.getElementById('manualError');
+            
+            if (isNaN(m) || m < 1000 || m > 9999) {
+                err.textContent = 'El multiplicando debe tener 4 cifras (1000 - 9999).';
+                reproducirSonidoError();
+                return;
+            }
+            if (isNaN(p) || p < 2 || p > 9) {
+                err.textContent = 'El multiplicador debe ser una cifra entre 2 y 9.';
+                reproducirSonidoError();
+                return;
+            }
+            
+            manualFixedOperation = { multiplicand: mStr, multiplier: pStr };
+            
+            gameState.questions = [null];
+            gameState.currentQuestionIndex = 0;
+            gameState.totalQuestions = 1;
+            gameState.score = 0;
+            gameState.startTime = Date.now();
+            gameState.gameMode = 'manual';
+            
+            if (gameState.timerInterval) {
+                clearInterval(gameState.timerInterval);
+            }
+            gameState.timerInterval = setInterval(updateTimer, 30);
+            
+            elements.manualScreen.classList.remove('active');
+            elements.gameScreen.classList.add('active');
+            
+            elements.fixedSoundBtn.style.display = 'flex';
+            elements.fixedHelpBtn.style.display = 'flex';
+            elements.fixedTableBtn.style.display = 'flex';
+            
+            updateGameHeader();
+            
+            elements.normalProgress.style.display = 'none';
+            elements.normalProgressBar.style.display = 'none';
+            
+            elements.questionTitle.textContent = 'Realiza la siguiente multiplicación';
+            
+            document.querySelector('.operation-wrapper').style.display = 'flex';
+            elements.digitBank.style.display = 'flex';
+            
+            generateNewOperation();
+        }
+
+        function goToStartScreen() {
+            reproducirSonidoTap();
+            
+            clearInterval(gameState.timerInterval);
+            
+            resetAllGameState();
+            
+            elements.gameScreen.classList.remove('active');
+            elements.startScreen.classList.add('active');
+        }
+
+        function resetAllGameState() {
+            userAnswer = {};
+            carries = {};
+            currentColumn = 0;
+            showCarryQuestion = false;
+            gameStarted = false;
+            isChecked = false;
+            manualFixedOperation = null;
+            
+            gameState.questions = [];
+            gameState.currentQuestionIndex = 0;
+            gameState.totalQuestions = 1;
+            gameState.score = 0;
+            gameState.startTime = null;
+            gameState.gameMode = 'normal';
+            
+            elements.feedback.classList.remove('show');
+            hideCarryQuestionLine();
+            elements.checkBtn.style.display = 'none';
+            elements.deleteBtn.style.display = 'flex';
+            elements.continueBtn.style.display = 'none';
+            
+            if (elements.fixedSoundBtn) {
+                elements.fixedSoundBtn.style.display = 'none';
+            }
+            if (elements.fixedHelpBtn) {
+                elements.fixedHelpBtn.style.display = 'none';
+            }
+            if (elements.fixedTableBtn) {
+                elements.fixedTableBtn.style.display = 'none';
+            }
+            
+            var answerBoxes = document.querySelectorAll('.answer-box');
+            answerBoxes.forEach(box => {
+                box.classList.remove('correct', 'incorrect');
+            });
+            
+            elements.digitBank.style.display = 'flex';
+            
+            elements.questionTitle.textContent = 'Realiza la siguiente multiplicación';
+            
+            document.querySelector('.operation-wrapper').style.display = 'flex';
+        }
+
+        function nextQuestion() {
+            reproducirSonidoTap();
+            
+            if (gameState.gameMode === 'normal') {
+                gameState.currentQuestionIndex++;
+                
+                elements.progressText.textContent = `${gameState.currentQuestionIndex + 1}/${gameState.totalQuestions}`;
+                elements.progressFill.style.width = `${((gameState.currentQuestionIndex + 1) / gameState.totalQuestions) * 100}%`;
+                
+                if (gameState.currentQuestionIndex < gameState.totalQuestions) {
+                    generateNewOperation();
+                } else {
+                    endGame();
+                }
+            } else if (gameState.gameMode === 'manual') {
+                endGame();
+            }
+        }
+
+        // Formatea milisegundos como MM:SS.CC (centésimas)
+        function formatTime(ms) {
+            const totalCentisecs = Math.floor(ms / 10);
+            const centisecs = totalCentisecs % 100;
+            const totalSecs = Math.floor(totalCentisecs / 100);
+            const sec = totalSecs % 60;
+            const mins = Math.floor(totalSecs / 60);
+            return `${mins.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}.${centisecs.toString().padStart(2, '0')}`;
+        }
+
+        function formatTimeFromSeconds(value) {
+            const secondsNum = parseFloat(value);
+            if (isNaN(secondsNum)) return '00:00.00';
+            return formatTime(secondsNum * 1000);
+        }
+
+        function updateTimer() {
+            if (!gameState.startTime) return;
+            
+            const elapsed = Date.now() - gameState.startTime;
+            elements.timer.textContent = formatTime(elapsed);
+        }
+
+        function endGame() {
+            clearInterval(gameState.timerInterval);
+            
+            const score = Math.round(gameState.score);
+            
+            const elapsedMs = Date.now() - gameState.startTime;
+            lastElapsedSeconds = elapsedMs / 1000;
+            const timeStr = formatTime(elapsedMs);
+            
+            elements.gameScreen.classList.remove('active');
+            elements.finalScreen.classList.add('active');
+            
+            if (elements.fixedSoundBtn) {
+                elements.fixedSoundBtn.style.display = 'none';
+            }
+            if (elements.fixedHelpBtn) {
+                elements.fixedHelpBtn.style.display = 'none';
+            }
+            if (elements.fixedTableBtn) {
+                elements.fixedTableBtn.style.display = 'none';
+            }
+            
+            elements.finalScore.textContent = score;
+            elements.finalTime.textContent = `Tiempo: ${timeStr}`;
+            
+            if (score === 100) {
+                elements.finalMessage.textContent = '¡Perfecto! Has logrado la máxima puntuación!';
+                elements.trophyContainer.classList.add('show');
+                elements.finalScore.classList.add('perfect');
+                
+                createConfetti();
+                
+                reproducirSonidoVictoria();
+            } else {
+                elements.trophyContainer.classList.remove('show');
+                elements.finalScore.classList.remove('perfect');
+                elements.finalMessage.textContent = '¡Repasa un poco y sigue practicando!';
+                
+                Sounds.play('completed');
+            }
+            
+            // El modo Manual es solo una operación suelta de práctica: no tiene Hall of Fame.
+            if (gameState.gameMode !== 'manual') {
+                showSubmitModal(lastElapsedSeconds, score);
+            }
+        }
+
+        /* ====================================================
+           HALL OF FAME
+        ===================================================== */
+        function loadHallOfFame() {
+            if (isHofLoading) return;
+            isHofLoading = true;
+            const tableBody = elements.hofTableBody;
+            tableBody.innerHTML = '<tr><td colspan="4" class="hall-of-fame-loading">Cargando puntuaciones...</td></tr>';
+            
+            const url = `${APP_SCRIPT_URL}?action=read&sheet=${SHEET_NAME}`;
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000);
+            
+            fetch(url, { signal: controller.signal })
+                .then(r => {
+                    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                    return r.json();
+                })
+                .then(data => {
+                    clearTimeout(timeoutId);
+                    isHofLoading = false;
+                    if (data.status === 'success' && data.data && data.data.length) {
+                        tableBody.innerHTML = data.data.slice(0, 10).map((row, i) => `
+                            <tr>
+                                <td>${i + 1}</td>
+                                <td>${row.name} ${row.surname}</td>
+                                <td>${row.score}</td>
+                                <td>${formatTimeFromSeconds(row.time)}</td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        tableBody.innerHTML = '<tr><td colspan="4" class="hall-of-fame-loading">¡Sé el primero en guardar tu puntuación!</td></tr>';
+                    }
+                })
+                .catch(err => {
+                    clearTimeout(timeoutId);
+                    isHofLoading = false;
+                    console.error('Error cargando Hall of Fame:', err);
+                    tableBody.innerHTML = '<tr><td colspan="4" class="hall-of-fame-error">Error al cargar puntuaciones</td></tr>';
+                });
+        }
+
+        function showSubmitModal(time, score) {
+            document.getElementById('modalTime').textContent = formatTime(time * 1000);
+            document.getElementById('playerName').value = '';
+            document.getElementById('playerSurname').value = '';
+            document.getElementById('modalValidationMsg').classList.add('hidden');
+            document.getElementById('submitScoreBtn').textContent = 'Guardar';
+            elements.submitModal.classList.add('active');
+        }
+
+        function submitScore() {
+            if (isSubmittingScore) return;
+            
+            const name = document.getElementById('playerName').value.trim();
+            const surname = document.getElementById('playerSurname').value.trim();
+            const score = parseInt(elements.finalScore.textContent);
+            const time = Math.round(lastElapsedSeconds * 100) / 100; // Segundos con precisión de centésimas
+            const validationMsg = document.getElementById('modalValidationMsg');
+            
+            if (!name || !surname) {
+                validationMsg.textContent = 'Por favor, rellena nombre y apellido';
+                validationMsg.classList.remove('hidden');
+                validationMsg.classList.remove('shake');
+                void validationMsg.offsetWidth;
+                validationMsg.classList.add('shake');
+                reproducirSonidoError();
+                return;
+            }
+            validationMsg.classList.add('hidden');
+            
+            isSubmittingScore = true;
+            const btn = document.getElementById('submitScoreBtn');
+            btn.textContent = 'Enviando...';
+            const payload = { sheet: SHEET_NAME, action: 'write', data: { score, time, name, surname } };
+            
+            fetch(APP_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload)
+            }).then(() => {
+                setTimeout(() => {
+                    elements.submitModal.classList.remove('active');
+                    btn.textContent = 'Guardar';
+                    isSubmittingScore = false;
+                    loadHallOfFame();
+                }, 1500);
+            }).catch(e => {
+                console.log('Error:', e);
+                btn.textContent = 'Guardar';
+                isSubmittingScore = false;
+            });
+        }
+
+        function discardScore() {
+            reproducirSonidoTap();
+            elements.submitModal.classList.remove('active');
+        }
+
+        /* ====================================================
+           TABLA DE MULTIPLICAR DE AYUDA
+        ===================================================== */
+        function toggleTableModal() {
+            elements.tableModal.classList.toggle('active');
+            reproducirSonidoTap();
+        }
+
+        function updateTableModalContent() {
+            var factor = parseInt(multiplier, 10);
+            if (isNaN(factor)) return;
+            
+            elements.tableModalTitle.textContent = `Tabla del ${factor}`;
+            
+            var rows = '';
+            for (var i = 1; i <= 10; i++) {
+                rows += `<tr><td>${factor} × ${i}</td><td class="result">= ${factor * i}</td></tr>`;
+            }
+            elements.tableModalContent.innerHTML = `<table class="times-table">${rows}</table>`;
+        }
+
+        function createConfetti() {
+            const colors = ['#d946ef', '#ff9f43', '#3b82f6', '#10b981', '#facc15'];
+            
+            for (let i = 0; i < 100; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    const x = Math.random() * window.innerWidth;
+                    const tx = (Math.random() - 0.5) * 200;
+                    confetti.style.left = x + 'px';
+                    confetti.style.top = '-10px';
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.width = `${Math.random() * 10 + 5}px`;
+                    confetti.style.height = confetti.style.width;
+                    confetti.style.opacity = Math.random() * 0.5 + 0.5;
+                    confetti.style.setProperty('--tx', tx + 'px');
+                    confetti.style.setProperty('--ty', (window.innerHeight + 20) + 'px');
+                    document.body.appendChild(confetti);
+                    
+                    setTimeout(() => {
+                        confetti.remove();
+                    }, 3000);
+                }, i * 30);
+            }
+        }
+
+        function restartGame() {
+            reproducirSonidoTap();
+            
+            resetAllGameState();
+            
+            elements.finalScreen.classList.remove('active');
+            elements.startScreen.classList.add('active');
+        }
+
+        function toggleSound() {
+            gameState.soundEnabled = !gameState.soundEnabled;
+            
+            // Actualizar icono del botón de sonido
+            const soundIcon = gameState.soundEnabled ? 
+                `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                </svg>` :
+                `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <line x1="23" y1="9" x2="17" y2="15"></line>
+                    <line x1="17" y1="9" x2="23" y2="15"></line>
+                </svg>`;
+            
+            if (elements.fixedSoundBtn) {
+                elements.fixedSoundBtn.innerHTML = soundIcon;
+            }
+            
+            console.log("Sonido", gameState.soundEnabled ? "activado" : "desactivado");
+            reproducirSonidoTap();
+        }
+
+        // Soporte de teclado
+        document.addEventListener('keydown', (e) => {
+            if (!elements.gameScreen.classList.contains('active')) return;
+            
+            if (e.key >= '0' && e.key <= '9') {
+                handleDigitBankClick(parseInt(e.key));
+            }
+            
+            if (e.key === 'Backspace') {
+                backspace();
+            }
+            
+            if (e.key === 'Enter') {
+                if (elements.checkBtn.style.display !== 'none') {
+                    checkAnswer();
+                } else if (elements.continueBtn.style.display !== 'none') {
+                    nextQuestion();
+                }
+            }
+            
+            if (e.key === 'Escape' && elements.helpModal.classList.contains('active')) {
+                toggleHelpModal();
+            }
+            
+            if (e.key === 'Escape' && elements.tableModal.classList.contains('active')) {
+                toggleTableModal();
+            }
+        });
+
+        elements.helpModal.addEventListener('click', (e) => {
+            if (e.target === elements.helpModal) {
+                toggleHelpModal();
+            }
+        });
+
+        elements.tableModal.addEventListener('click', (e) => {
+            if (e.target === elements.tableModal) {
+                toggleTableModal();
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            if (elements.gameScreen.classList.contains('active')) {
+                renderNumberBank();
+            }
+        });
+
+        // Inicialización del juego
+        init();
+    </script>
+</body>
+</html>
