@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>La multiplicación por una cifra</title>
+    <title>La resta con llevadas</title>
     <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/ManuelVS8/Audios-juegos-SCIENCE/refs/heads/main/icono.ico">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -70,6 +70,12 @@
         .row { display:flex;gap:.3rem;margin-bottom:.1rem; }
         .digit-box { width:2.6rem;height:2.6rem;display:flex;align-items:center;justify-content:center;position:relative;font-weight:bold;color:var(--blue-dark); }
         .carry-mark { position:absolute;top:-1.2rem;left:50%;transform:translateX(-50%);color:var(--red);font-size:.9rem;font-weight:bold; }
+        /* En la resta, la llevada (préstamo) se anota debajo, junto a la cifra que la recibe */
+        .carry-mark-below { position:absolute;bottom:.15rem;left:.15rem;color:var(--red);font-size:1rem;font-weight:bold; }
+        /* Flecha flotante: recuerda que en la resta se va de abajo a arriba */
+        .arrow-container { display:flex;align-items:center;margin-left:.8rem; }
+        .arrow { width:2.4rem;height:2.4rem;color:#7c3aed;animation:arrowBounce 1s infinite;flex-shrink:0; }
+        @keyframes arrowBounce { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-6px);} }
         .line { width:2.6rem;border-top:3px solid var(--blue-dark); }
         .answer-box { width:2.6rem;height:2.6rem;display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:bold;border:2px solid #d1d5db;border-radius:.5rem;background:#f9fafb;transition:all .25s;cursor:pointer; }
         .answer-box.current   { border-color:#a855f7;background:#faf5ff;transform:scale(1.08); }
@@ -161,12 +167,12 @@
     <!-- ══ INICIO ══ -->
     <div id="startScreen" class="screen active">
         <header>
-            <h1>La multiplicación por una cifra</h1>
-            <div class="subtitle">Practica la multiplicación por una cifra y aprende jugando</div>
+            <h1>La resta con llevadas</h1>
+            <div class="subtitle">Practica la resta con llevadas y aprende jugando</div>
         </header>
         <div class="start-content">
             <div class="advice-box">
-                Recuerda que en la multiplicación vamos <span class="key">de derecha a izquierda</span>. Si tienes dudas, pulsa el botón de ayuda durante el juego.
+                Recuerda que en la resta con llevadas vamos <span class="key">de derecha a izquierda</span>; no se dice "quitar". Si la cifra de arriba es menor que la de abajo, le pides prestada una decena a la siguiente columna. Si tienes dudas, pulsa el botón de ayuda durante el juego.
                 <br><strong>¡Buena suerte!</strong>
             </div>
             <div class="btn-group">
@@ -198,12 +204,12 @@
         <header><h1>Modo Manual</h1></header>
         <div class="start-content">
             <div class="input-group">
-                <label for="inpMultiplicand">Multiplicando (4 cifras: 1000 – 9999)</label>
-                <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" id="inpMultiplicand" placeholder="Ej: 3247">
+                <label for="inpMinuend">Minuendo (5 cifras: 10000 – 99999)</label>
+                <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="5" autocomplete="off" id="inpMinuend" placeholder="Ej: 65432">
             </div>
             <div class="input-group">
-                <label for="inpMultiplier">Multiplicador (1 cifra: 2 – 9)</label>
-                <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" id="inpMultiplier" placeholder="Ej: 6">
+                <label for="inpSubtrahend">Sustraendo (5 cifras: 10000 – 99999)</label>
+                <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="5" autocomplete="off" id="inpSubtrahend" placeholder="Ej: 18765">
             </div>
             <div class="manual-error" id="manualError"></div>
             <div class="btn-group">
@@ -222,15 +228,6 @@
                 <line x1="12" y1="17" x2="12.01" y2="17"></line>
             </svg>
         </button>
-        <button id="fixedTableBtn" class="fixed-table-btn" aria-label="Tabla de multiplicar" onclick="toggleTableModal()">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2"></rect>
-                <line x1="3" y1="9" x2="21" y2="9"></line>
-                <line x1="3" y1="15" x2="21" y2="15"></line>
-                <line x1="9" y1="3" x2="9" y2="21"></line>
-                <line x1="15" y1="3" x2="15" y2="21"></line>
-            </svg>
-        </button>
         <button id="fixedSoundBtn" class="fixed-sound-btn" aria-label="Activar sonido" onclick="toggleSound()">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
@@ -238,24 +235,30 @@
             </svg>
         </button>
 
-        <header style="margin-top:2.8rem;">
-            <h1 id="questionTitle">Realiza la siguiente multiplicación</h1>
+        <div class="game-header" style="margin-top:2.8rem;">
+            <div id="timer" class="timer">00:00.00</div>
+        </div>
+
+        <header>
+            <h1 id="questionTitle">Realiza la siguiente resta</h1>
         </header>
 
-        <div class="game-header">
-            <div id="timer" class="timer">00:00.00</div>
-            <div id="normalProgress" class="progress-text" style="display:none;">1/3</div>
-            <div id="normalProgressBar" class="progress-bar" style="display:none;">
-                <div class="progress-fill" id="progressFill" style="width:33.33%"></div>
-            </div>
+        <div id="normalProgress" class="progress-text" style="display:none;">1/3</div>
+        <div id="normalProgressBar" class="progress-bar" style="display:none;">
+            <div class="progress-fill" id="progressFill" style="width:33.33%"></div>
         </div>
 
         <div class="operation-wrapper">
             <div class="operation">
-                <div id="multiplicandRow" class="row"></div>
-                <div id="multiplierRow" class="row"></div>
+                <div id="minuendRow" class="row"></div>
+                <div id="subtrahendRow" class="row"></div>
                 <div id="lineRow" class="row"></div>
                 <div id="answerRow" class="row"></div>
+            </div>
+            <div class="arrow-container">
+                <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <path d="M12 19V5M5 12l7-7 7 7"/>
+                </svg>
             </div>
         </div>
 
@@ -275,7 +278,7 @@
 
     <!-- ══ FINAL ══ -->
     <div id="finalScreen" class="screen final-screen">
-        <header><h1>La multiplicación por una cifra</h1></header>
+        <header><h1>La resta con llevadas</h1></header>
         <div class="results">
             <div id="trophyContainer" class="trophy">🏆</div>
             <div class="final-score" id="finalScore">0</div>
@@ -295,32 +298,21 @@
     <div id="helpModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>¿Cómo multiplicar por una cifra?</h2>
+                <h2>¿Cómo realizar la resta con llevadas?</h2>
                 <button class="modal-close" id="closeHelpModal" onclick="toggleHelpModal()">&times;</button>
             </div>
             <div class="help-content">
+                <h3>Pasos para realizar la resta con llevadas:</h3>
                 <div class="help-steps">
                     <ol>
                         <li>Empieza por la derecha.</li>
-                        <li>Multiplica el factor de abajo por la cifra de arriba.</li>
-                        <li>Si el resultado es un número <span class="magnitude-highlight">mayor de 10</span>, colocas la última cifra y te llevas la cifra de las decenas (<span class="magnitude-highlight">la de delante</span>).</li>
-                        <li>Coloca las llevadas arriba en la siguiente columna.</li>
-                        <li>Cuando multipliques la siguiente cifra, recuerda <span class="magnitude-highlight">sumar las que te llevas al resultado</span>.</li>
+                        <li>Busca cuánto falta para llegar a la cifra de arriba.</li>
+                        <li>Si el minuendo es menor al sustraendo, debes llegar hasta el siguente número que acabe en esa cifra y <span class="magnitude-highlight">te llevas 1</span>.</li>
+                        <li>Esa llevada se suma a la siguiente cifra del sustraendo.</li>
                     </ol>
                     <p class="highlight-note">¡Comprueba tu respuesta al final!</p>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- Modal de la tabla de multiplicar de ayuda -->
-    <div id="tableModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="tableModalTitle">Tabla del 2</h2>
-                <button class="modal-close" onclick="toggleTableModal()">&times;</button>
-            </div>
-            <div id="tableModalContent"></div>
         </div>
     </div>
 
@@ -341,20 +333,20 @@
 
     <script>
         // Configuración del juego
-        const SHEET_NAME = "Multiplicar_1Cifra";
+        const SHEET_NAME = "Restar_llevadas";
         const APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxYNz7wXhyUFzbEMoS1023ubcqPYrs1FDnlfAw8mFzd2JPIh52FZedik_oZNGkP4LaE/exec";
-        var DIGITS_MULTIPLICAND = 4;
-        var multiplicand = '';
-        var multiplier = '';
+        var DIGITS = 5;
+        var minuend = '';
+        var subtrahend = '';
         var userAnswer = {};
-        var carries = {};
+        var carries = {}; // carries[col] = true si esa columna recibe un préstamo (llevada booleana)
         var currentColumn = 0;
         var checkResults = null; // {colIdx: bool} tras pulsar "Comprobar", para repintar tras renderOperation()
         var historyStack = []; // orden REAL en que se han escrito las cifras, para "Borrar"/corregir
         var showCarryQuestion = false;
         var gameStarted = false;
         var isChecked = false;
-        var manualFixedOperation = null; // {multiplicand, multiplier} cuando viene del modo Manual
+        var manualFixedOperation = null; // [minuend, subtrahend] cuando viene del modo Manual
         var lastElapsedSeconds = 0;
         var isSubmittingScore = false;
         var isHofLoading = false;
@@ -381,8 +373,8 @@
             helpModal: document.getElementById('helpModal'),
             closeHelpModal: document.getElementById('closeHelpModal'),
             questionTitle: document.getElementById('questionTitle'),
-            multiplicandRow: document.getElementById('multiplicandRow'),
-            multiplierRow: document.getElementById('multiplierRow'),
+            minuendRow: document.getElementById('minuendRow'),
+            subtrahendRow: document.getElementById('subtrahendRow'),
             lineRow: document.getElementById('lineRow'),
             answerRow: document.getElementById('answerRow'),
             digitBank: document.getElementById('digitBank'),
@@ -392,7 +384,6 @@
             continueBtn: document.getElementById('continueBtn'),
             fixedSoundBtn: document.getElementById('fixedSoundBtn'),
             fixedHelpBtn: document.getElementById('fixedHelpBtn'),
-            fixedTableBtn: document.getElementById('fixedTableBtn'),
             feedback: document.getElementById('feedback'),
             progressText: document.getElementById('normalProgress'),
             progressFill: document.getElementById('progressFill'),
@@ -404,9 +395,6 @@
             finalMessage: document.getElementById('finalMessage'),
             restartBtn: document.getElementById('restartBtn'),
             trophyContainer: document.getElementById('trophyContainer'),
-            tableModal: document.getElementById('tableModal'),
-            tableModalTitle: document.getElementById('tableModalTitle'),
-            tableModalContent: document.getElementById('tableModalContent'),
             submitModal: document.getElementById('submitModal'),
             hofTableBody: document.getElementById('hofTableBody')
         };
@@ -514,36 +502,37 @@
             return Math.floor(Math.random() * (max - min + 1)) + min;
         }
 
-        function generateMultiplicationWithCarries() {
+        function generateSubtractionWithCarries() {
             var num1, num2;
             var hasCarry = false;
             var attempts = 0;
             var carryCount = 0;
 
             while ((carryCount < 2 || !hasCarry) && attempts < 100) {
-                num1 = generateRandomNumber(DIGITS_MULTIPLICAND);
-                num2 = Math.floor(Math.random() * 8) + 2; // Multiplicador de 2 a 9
+                num1 = generateRandomNumber(DIGITS);
+                num2 = generateRandomNumber(DIGITS);
 
-                // NUEVA CONDICIÓN: Comprobar si el multiplicando tiene dígitos únicos
-                var num1Str = num1.toString();
-                var hasUniqueDigits = new Set(num1Str).size === num1Str.length;
-                if (!hasUniqueDigits) {
-                    attempts++;
-                    continue; // Si no tiene dígitos únicos, volver a generar
+                if (num1 < num2) {
+                    var temp = num1;
+                    num1 = num2;
+                    num2 = temp;
                 }
 
                 var mStr = num1.toString();
+                var sStr = num2.toString().padStart(DIGITS, '0');
+
                 hasCarry = false;
                 carryCount = 0;
                 var currentCarry = 0;
 
-                for (var i = DIGITS_MULTIPLICAND - 1; i >= 0; i--) {
-                    var product = parseInt(mStr[i]) * num2 + currentCarry;
-                    
-                    if (product >= 10) {
+                for (var i = DIGITS - 1; i >= 0; i--) {
+                    var mDigit = parseInt(mStr[i]);
+                    var sDigit = parseInt(sStr[i]) + currentCarry;
+
+                    if (mDigit < sDigit) {
                         hasCarry = true;
                         carryCount++;
-                        currentCarry = Math.floor(product / 10);
+                        currentCarry = 1;
                     } else {
                         currentCarry = 0;
                     }
@@ -551,24 +540,23 @@
                 attempts++;
             }
 
-            multiplicand = num1.toString();
-            multiplier = num2.toString();
+            minuend = num1.toString();
+            subtrahend = num2.toString();
 
             if (carryCount < 2) {
-                multiplicand = '9876'; // '9876' has unique digits
-                multiplier = '9';
+                minuend = '65432';
+                subtrahend = '18765';
             }
         }
 
         function generateNewOperation() {
             if (manualFixedOperation) {
-                multiplicand = manualFixedOperation.multiplicand;
-                multiplier = manualFixedOperation.multiplier;
+                minuend = manualFixedOperation[0];
+                subtrahend = manualFixedOperation[1];
             } else {
-                generateMultiplicationWithCarries();
+                generateSubtractionWithCarries();
             }
             reset();
-            updateTableModalContent();
         }
 
         function init() {
@@ -597,44 +585,47 @@
         }
 
         function renderOperation() {
-            var product = parseInt(multiplicand) * parseInt(multiplier);
-            var productStr = product.toString();
-            var numDigits = productStr.length;
+            var numDigits = DIGITS; // el resultado nunca tiene más cifras que el minuendo
 
-            // Multiplicando
-            var multiplicandRow = elements.multiplicandRow;
-            multiplicandRow.innerHTML = '';
-            var paddedMultiplicand = multiplicand.padStart(numDigits, ' ');
+            // Minuendo (con una columna en blanco a la izquierda, en el lugar del signo,
+            // para que quede alineado con el sustraendo)
+            var minuendRow = elements.minuendRow;
+            minuendRow.innerHTML = '';
+            var signBlankM = document.createElement('div');
+            signBlankM.className = 'digit-box';
+            minuendRow.appendChild(signBlankM);
+            var paddedMinuend = minuend.padStart(numDigits, ' ');
             for (var i = 0; i < numDigits; i++) {
                 var div = document.createElement('div');
                 div.className = 'digit-box';
-                div.textContent = paddedMultiplicand[i];
-                multiplicandRow.appendChild(div);
+                div.textContent = paddedMinuend[i];
+                minuendRow.appendChild(div);
             }
 
-            // Multiplicador
-            var multiplierRow = elements.multiplierRow;
-            multiplierRow.innerHTML = '';
-            var paddedMultiplier = multiplier.padStart(numDigits, ' ');
+            // Sustraendo, con el signo − en su PROPIA columna a la izquierda de todo
+            // (donde iría la cifra de las centenas de millar), como se escribe en España.
+            var subtrahendRow = elements.subtrahendRow;
+            subtrahendRow.innerHTML = '';
+            var signDiv = document.createElement('div');
+            signDiv.className = 'digit-box';
+            signDiv.textContent = '−';
+            subtrahendRow.appendChild(signDiv);
+            var paddedSubtrahend = subtrahend.padStart(numDigits, ' ');
             for (var i = 0; i < numDigits; i++) {
                 var div = document.createElement('div');
                 div.className = 'digit-box';
-                if (i === numDigits - 1) {
-                    div.textContent = '×' + paddedMultiplier[i];
-                } else {
-                    div.textContent = paddedMultiplier[i];
-                }
-                multiplierRow.appendChild(div);
+                div.textContent = paddedSubtrahend[i];
+                subtrahendRow.appendChild(div);
             }
 
-            // Línea
+            // Línea: un único trazo recto y continuo (no una fila de segmentos con huecos)
             var lineRow = elements.lineRow;
             lineRow.innerHTML = '';
-            for (var i = 0; i < numDigits; i++) {
-                var div = document.createElement('div');
-                div.className = 'line';
-                lineRow.appendChild(div);
-            }
+            lineRow.style.gap = '0';
+            var lineWidth = (numDigits * 2.6) + ((numDigits - 1) * 0.3);
+            var lineDiv = document.createElement('div');
+            lineDiv.style.cssText = 'border-top:3px solid var(--blue-dark);height:0;width:' + lineWidth + 'rem;';
+            lineRow.appendChild(lineDiv);
 
             // Respuesta
             var answerRow = elements.answerRow;
@@ -669,18 +660,22 @@
                 answerRow.appendChild(div);
             }
 
-            // Añadir llevadas encima del multiplicando
-            var multiplicandBoxes = elements.multiplicandRow.querySelectorAll('.digit-box');
+            // Marca de préstamo: se anota DEBAJO, junto a la cifra del sustraendo que la
+            // recibe (la siguiente columna hacia la izquierda) — igual que en el original.
+            // Ojo: la fila ahora tiene una columna extra al principio (la del signo),
+            // así que el índice real de cada cifra es i+1.
+            var subtrahendBoxes = elements.subtrahendRow.querySelectorAll('.digit-box');
             for (var i = 0; i < numDigits; i++) {
                 var reverseIdx = numDigits - 1 - i;
-                if (carries[reverseIdx] && carries[reverseIdx] > 0) {
+                if (carries[reverseIdx]) {
                     var carry = document.createElement('span');
-                    carry.className = 'carry-mark';
-                    carry.textContent = carries[reverseIdx];
-                    multiplicandBoxes[i].appendChild(carry);
+                    carry.className = 'carry-mark-below';
+                    carry.textContent = '1';
+                    subtrahendBoxes[i + 1].appendChild(carry);
                 }
             }
 
+            renderBankOrCarryChoice();
             updateUI();
         }
 
@@ -752,17 +747,14 @@
         // Punto de entrada único del banco de números: decide si el toque
         // responde a una casilla de la operación o a la pregunta de llevada.
         function handleDigitBankClick(num) {
-            if (showCarryQuestion) {
-                handleCarry(num);
-            } else {
-                handleNumberClick(num);
-            }
+            // Durante la pregunta de préstamo, el "banco" son los botones Sí/No
+            // (ver renderBorrowChoice), así que esta función solo gestiona la
+            // introducción normal de cifras.
+            handleNumberClick(num);
         }
 
         function hasLaterFilledCell() {
-            var product = parseInt(multiplicand) * parseInt(multiplier);
-            var numDigits = product.toString().length;
-            for (var i = currentColumn + 1; i < numDigits; i++) {
+            for (var i = currentColumn + 1; i < DIGITS; i++) {
                 if (userAnswer[i] !== undefined) return true;
             }
             return false;
@@ -770,23 +762,20 @@
 
         // Sitúa el cursor en la primera casilla vacía real (se usa tras una corrección).
         function moveCursorToFrontier() {
-            var product = parseInt(multiplicand) * parseInt(multiplier);
-            var numDigits = product.toString().length;
-            for (var i = 0; i < numDigits; i++) {
+            for (var i = 0; i < DIGITS; i++) {
                 if (userAnswer[i] === undefined) { currentColumn = i; return; }
             }
-            currentColumn = numDigits;
+            currentColumn = DIGITS;
         }
 
         function handleNumberClick(num) {
             if (isChecked) return;
+            if (showCarryQuestion) return; // mientras se pregunta el préstamo, no se aceptan cifras
             if (!gameStarted) {
                 gameStarted = true;
             }
             
-            var product = parseInt(multiplicand) * parseInt(multiplier);
-            var numDigits = product.toString().length;
-            if (currentColumn >= numDigits) return; 
+            if (currentColumn >= DIGITS) return; 
 
             elements.feedback.classList.remove('show');
             
@@ -795,26 +784,17 @@
             historyStack.push(currentColumn);
             userAnswer[currentColumn] = num;
 
-            // LÓGICA CORREGIDA PARA LA VENTANA DE LLEVADAS
-            // Obtenemos el número de dígitos del resultado final para tomar decisiones
-            var numDigits = product.toString().length;
-
             if (isCorrection) {
                 // Es una rectificación de una casilla ya escrita: no se pregunta llevada,
                 // se continúa por la siguiente casilla que esté realmente vacía.
                 showCarryQuestion = false;
                 hideCarryQuestionLine();
                 moveCursorToFrontier();
-            } else if (currentColumn === numDigits - 1) {
-                // 1. Siempre que estemos en la última columna, simplemente avanzamos.
-                currentColumn++;
-            } else if (numDigits === 5 && currentColumn === 3) {
-                // 2. Caso especial: Es la columna de miles de un resultado de 5 cifras.
-                // No preguntamos la llevada, simplemente avanzamos a la última casilla.
+            } else if (currentColumn === DIGITS - 1) {
+                // Siempre que estemos en la última columna, simplemente avanzamos.
                 currentColumn++;
             } else {
-                // 3. En cualquier otro caso (unidades, decenas, centenas para 4 y 5 cifras),
-                // preguntamos por la llevada sobre el propio banco (sin ventana emergente).
+                // En cualquier otra columna, preguntamos si se ha pedido prestado.
                 showCarryQuestion = true;
                 showCarryQuestionLine();
             }
@@ -824,21 +804,53 @@
         }
 
         function showCarryQuestionLine() {
-            elements.carryQuestionLine.textContent = '¿Cuántas te llevas?';
+            elements.carryQuestionLine.textContent = '¿Te llevas 1 para la siguiente columna?';
         }
 
         function hideCarryQuestionLine() {
             elements.carryQuestionLine.textContent = '';
         }
 
-        function handleCarry(carryAmount) {
+        // Muestra el banco normal de cifras, o los dos botones Sí/No cuando toca
+        // responder si se ha pedido prestado (la llevada de la resta es binaria,
+        // no una cifra, así que no reutiliza el banco 0-9).
+        function renderBankOrCarryChoice() {
+            if (showCarryQuestion) {
+                renderBorrowChoice();
+            } else {
+                renderNumberBank();
+            }
+        }
+
+        function renderBorrowChoice() {
+            var container = elements.digitBank;
+            container.innerHTML = '';
+            container.style.display = 'flex';
+
+            var yesBtn = document.createElement('button');
+            yesBtn.className = 'btn btn-success';
+            yesBtn.style.cssText = 'min-width:200px;height:54px;font-size:1.05rem;margin:4px;';
+            yesBtn.textContent = 'Sí, me llevo 1';
+            yesBtn.onclick = function() { handleCarry(true); };
+
+            var noBtn = document.createElement('button');
+            noBtn.className = 'btn btn-danger';
+            noBtn.style.cssText = 'min-width:140px;height:54px;font-size:1.05rem;margin:4px;';
+            noBtn.textContent = 'No';
+            noBtn.onclick = function() { handleCarry(false); };
+
+            container.appendChild(yesBtn);
+            container.appendChild(noBtn);
+        }
+
+        function handleCarry(hasCarry) {
             if (isChecked) return;
             
             hideCarryQuestionLine();
             
-            if (carryAmount > 0) {
+            if (hasCarry) {
                 var nextColumn = currentColumn + 1;
-                carries[nextColumn] = carryAmount;
+                carries[nextColumn] = true;
             } else {
                 delete carries[currentColumn + 1];
             }
@@ -876,9 +888,9 @@
         }
 
         function checkAnswer() {
-            var correctAnswerNum = parseInt(multiplicand) * parseInt(multiplier);
-            var correctAnswer = correctAnswerNum.toString();
-            var numDigits = correctAnswer.length;
+            var correctAnswerNum = parseInt(minuend) - parseInt(subtrahend);
+            var correctAnswer = correctAnswerNum.toString().padStart(DIGITS, '0');
+            var numDigits = DIGITS;
             
             var userResult = '';
             for (let i = 0; i < numDigits; i++) {
@@ -956,8 +968,7 @@
         }
 
         function updateUI() {
-            var product = parseInt(multiplicand) * parseInt(multiplier);
-            var numDigits = product.toString().length;
+            var numDigits = DIGITS;
             var filledCount = Object.keys(userAnswer).length;
             var allFilled = filledCount === numDigits && !showCarryQuestion;
 
@@ -997,14 +1008,13 @@
             
             elements.fixedSoundBtn.style.display = 'flex';
             elements.fixedHelpBtn.style.display = 'flex';
-            elements.fixedTableBtn.style.display = 'flex';
             
             updateGameHeader();
             
             elements.normalProgress.style.display = 'none';
             elements.normalProgressBar.style.display = 'none';
             
-            elements.questionTitle.textContent = 'Realiza la siguiente multiplicación';
+            elements.questionTitle.textContent = 'Realiza la siguiente resta';
             
             generateNewOperation();
         }
@@ -1012,8 +1022,8 @@
         // ── Modo Manual ──
         function showManualSetup() {
             reproducirSonidoTap();
-            document.getElementById('inpMultiplicand').value = '';
-            document.getElementById('inpMultiplier').value = '';
+            document.getElementById('inpMinuend').value = '';
+            document.getElementById('inpSubtrahend').value = '';
             document.getElementById('manualError').textContent = '';
             elements.startScreen.classList.remove('active');
             elements.manualScreen.classList.add('active');
@@ -1028,24 +1038,29 @@
         function startManual() {
             reproducirSonidoTap();
             
-            var mStr = document.getElementById('inpMultiplicand').value.trim();
-            var pStr = document.getElementById('inpMultiplier').value.trim();
+            var mStr = document.getElementById('inpMinuend').value.trim();
+            var sStr = document.getElementById('inpSubtrahend').value.trim();
             var m = parseInt(mStr, 10);
-            var p = parseInt(pStr, 10);
+            var s = parseInt(sStr, 10);
             var err = document.getElementById('manualError');
-            
-            if (isNaN(m) || m < 1000 || m > 9999) {
-                err.textContent = 'El multiplicando debe tener 4 cifras (1000 - 9999).';
+
+            function isValid(str) {
+                var n = parseInt(str, 10);
+                return !isNaN(n) && str.length === 5 && n >= 10000 && n <= 99999;
+            }
+
+            if (!isValid(mStr) || !isValid(sStr)) {
+                err.textContent = 'El minuendo y el sustraendo deben tener 5 cifras (10000 - 99999).';
                 reproducirSonidoError();
                 return;
             }
-            if (isNaN(p) || p < 2 || p > 9) {
-                err.textContent = 'El multiplicador debe ser una cifra entre 2 y 9.';
+            if (m <= s) {
+                err.textContent = 'El minuendo debe ser mayor que el sustraendo.';
                 reproducirSonidoError();
                 return;
             }
             
-            manualFixedOperation = { multiplicand: mStr, multiplier: pStr };
+            manualFixedOperation = [mStr, sStr];
             
             gameState.questions = [null];
             gameState.currentQuestionIndex = 0;
@@ -1065,14 +1080,13 @@
             
             elements.fixedSoundBtn.style.display = 'flex';
             elements.fixedHelpBtn.style.display = 'flex';
-            elements.fixedTableBtn.style.display = 'flex';
             
             updateGameHeader();
             
             elements.normalProgress.style.display = 'none';
             elements.normalProgressBar.style.display = 'none';
             
-            elements.questionTitle.textContent = 'Realiza la siguiente multiplicación';
+            elements.questionTitle.textContent = 'Realiza la siguiente resta';
             
             document.querySelector('.operation-wrapper').style.display = 'flex';
             elements.digitBank.style.display = 'flex';
@@ -1120,9 +1134,6 @@
             if (elements.fixedHelpBtn) {
                 elements.fixedHelpBtn.style.display = 'none';
             }
-            if (elements.fixedTableBtn) {
-                elements.fixedTableBtn.style.display = 'none';
-            }
             
             var answerBoxes = document.querySelectorAll('.answer-box');
             answerBoxes.forEach(box => {
@@ -1131,7 +1142,7 @@
             
             elements.digitBank.style.display = 'flex';
             
-            elements.questionTitle.textContent = 'Realiza la siguiente multiplicación';
+            elements.questionTitle.textContent = 'Realiza la siguiente resta';
             
             document.querySelector('.operation-wrapper').style.display = 'flex';
         }
@@ -1199,9 +1210,6 @@
             }
             if (elements.fixedHelpBtn) {
                 elements.fixedHelpBtn.style.display = 'none';
-            }
-            if (elements.fixedTableBtn) {
-                elements.fixedTableBtn.style.display = 'none';
             }
             
             elements.finalScore.textContent = score;
@@ -1331,27 +1339,6 @@
             elements.submitModal.classList.remove('active');
         }
 
-        /* ====================================================
-           TABLA DE MULTIPLICAR DE AYUDA
-        ===================================================== */
-        function toggleTableModal() {
-            elements.tableModal.classList.toggle('active');
-            reproducirSonidoTap();
-        }
-
-        function updateTableModalContent() {
-            var factor = parseInt(multiplier, 10);
-            if (isNaN(factor)) return;
-            
-            elements.tableModalTitle.textContent = `Tabla del ${factor}`;
-            
-            var rows = '';
-            for (var i = 1; i <= 10; i++) {
-                rows += `<tr><td>${factor} × ${i}</td><td class="result">= ${factor * i}</td></tr>`;
-            }
-            elements.tableModalContent.innerHTML = `<table class="times-table">${rows}</table>`;
-        }
-
         function createConfetti() {
             const colors = ['#d946ef', '#ff9f43', '#3b82f6', '#10b981', '#facc15'];
             
@@ -1433,21 +1420,11 @@
             if (e.key === 'Escape' && elements.helpModal.classList.contains('active')) {
                 toggleHelpModal();
             }
-            
-            if (e.key === 'Escape' && elements.tableModal.classList.contains('active')) {
-                toggleTableModal();
-            }
         });
 
         elements.helpModal.addEventListener('click', (e) => {
             if (e.target === elements.helpModal) {
                 toggleHelpModal();
-            }
-        });
-
-        elements.tableModal.addEventListener('click', (e) => {
-            if (e.target === elements.tableModal) {
-                toggleTableModal();
             }
         });
 

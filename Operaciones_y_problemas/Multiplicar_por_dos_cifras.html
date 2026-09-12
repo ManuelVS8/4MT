@@ -59,7 +59,7 @@
 
         /* Cabecera juego */
         .game-header { margin-bottom:8px;display:flex;flex-direction:column;align-items:center;width:100%; }
-        .timer { font-weight:900;color:var(--blue-700);font-size:clamp(1rem,2.5vw,1.2rem);background:var(--panel);padding:6px 16px;border-radius:20px; }
+        .timer { font-weight:900;color:var(--blue-700);font-size:clamp(1rem,2.5vw,1.2rem);background:var(--panel);padding:6px 16px;border-radius:20px;font-variant-numeric:tabular-nums;width:120px;text-align:center;display:inline-block;white-space:nowrap; }
         .progress-bar { height:8px;background:#e6f2ff;border-radius:999px;overflow:hidden;width:100%;max-width:400px;border:1px solid #d3e2ff;margin:8px auto 4px; }
         .progress-fill { height:100%;background:var(--orange);border-radius:999px;transition:width .3s; }
         .progress-text { text-align:center;font-size:13px;color:var(--text-light);margin-bottom:4px;width:100%; }
@@ -359,6 +359,7 @@
         var userPartial = [];   // userPartial[r][colFromRight] = dígito
         var userSum = {};       // userSum[colFromRight] = dígito
         var carriesActive = {}; // llevadas visibles SOLO de la fila/fase activa
+        var checkResults = null; // {partial:[{col:bool}], sum:{col:bool}} tras pulsar "Comprobar"
         var historyStack = []; // orden REAL en que se han escrito las cifras, para que "Borrar"
                                 // deshaga siempre la última acción, aunque haya habido correcciones
 
@@ -374,6 +375,7 @@
             currentQuestionIndex: 0,
             score: 0,
             startTime: null,
+            frozenElapsedMs: null,
             timerInterval: null,
             soundEnabled: true,
             audioInitialized: false,
@@ -634,6 +636,9 @@
                     var isCurrent = (!isChecked && phase === 'multiply' && r === rowIndex && c === currentColumn && gameStarted);
                     if (digit !== undefined) cls += ' filled';
                     if (isCurrent) cls += ' current';
+                    if (isChecked && checkResults) {
+                        cls += checkResults.partial[r][c] ? ' correct' : ' incorrect';
+                    }
                     var cellData = {
                         className: cls,
                         id: 'partial-' + r + '-' + c,
@@ -658,6 +663,9 @@
                 var isCurrent2 = (!isChecked && phase === 'sum' && c === currentColumn && gameStarted);
                 if (digit2 !== undefined) cls2 += ' filled';
                 if (isCurrent2) cls2 += ' current';
+                if (isChecked && checkResults) {
+                    cls2 += checkResults.sum[c] ? ' correct' : ' incorrect';
+                }
                 var cellData2 = {
                     className: cls2,
                     id: 'sum-' + c,
@@ -900,33 +908,33 @@
             if (!isEverythingFilled()) return;
 
             var allCorrect = true;
+            var partialResults = [];
 
             for (var r = 0; r < DIGITS_MULTIPLIER; r++) {
                 var meta = rows[r];
+                var rowRes = {};
                 for (var c = 0; c < meta.len; c++) {
-                    var box = document.getElementById('partial-' + r + '-' + c);
                     var userDigit = userPartial[r][meta.shift + c];
                     var correctDigit = meta.str[meta.len - 1 - c];
-                    if (String(userDigit) === correctDigit) {
-                        box.classList.add('correct');
-                    } else {
-                        box.classList.add('incorrect');
-                        allCorrect = false;
-                    }
+                    var ok = String(userDigit) === correctDigit;
+                    rowRes[c] = ok;
+                    if (!ok) allCorrect = false;
                 }
+                partialResults.push(rowRes);
             }
 
+            var sumResults = {};
             for (var c2 = 0; c2 < numDigits; c2++) {
-                var box2 = document.getElementById('sum-' + c2);
                 var userDigit2 = userSum[c2];
                 var correctDigit2 = finalStr[numDigits - 1 - c2];
-                if (String(userDigit2) === correctDigit2) {
-                    box2.classList.add('correct');
-                } else {
-                    box2.classList.add('incorrect');
-                    allCorrect = false;
-                }
+                var ok2 = String(userDigit2) === correctDigit2;
+                sumResults[c2] = ok2;
+                if (!ok2) allCorrect = false;
             }
+
+            // Guardamos el resultado casilla a casilla para que renderOperation() pueda
+            // volver a pintarlas de verde/rojo después de reconstruir la rejilla.
+            checkResults = { partial: partialResults, sum: sumResults };
 
             var correctAnswerNum = parseInt(multiplicand, 10) * parseInt(multiplier, 10);
 
@@ -941,6 +949,13 @@
                 reproducirSonidoError();
             }
 
+            // Al comprobar, el cronómetro se para en ese instante: ese es el tiempo que se
+            // llevará a la pantalla final al pulsar "Continuar" (no sigue corriendo mientras
+            // el usuario mira el resultado).
+            clearInterval(gameState.timerInterval);
+            gameState.frozenElapsedMs = Date.now() - gameState.startTime;
+            elements.timer.textContent = formatTime(gameState.frozenElapsedMs);
+
             elements.continueBtn.style.display = 'flex';
             isChecked = true;
             renderOperation();
@@ -953,6 +968,7 @@
             currentColumn = 0;
             carriesActive = {};
             historyStack = [];
+            checkResults = null;
             showCarryQuestion = false;
             gameStarted = false;
             isChecked = false;
@@ -988,6 +1004,7 @@
             gameState.totalQuestions = 1;
             gameState.score = 0;
             gameState.startTime = Date.now();
+            gameState.frozenElapsedMs = null;
             gameState.gameMode = 'normal';
 
             if (gameState.timerInterval) clearInterval(gameState.timerInterval);
@@ -1049,6 +1066,7 @@
             gameState.totalQuestions = 1;
             gameState.score = 0;
             gameState.startTime = Date.now();
+            gameState.frozenElapsedMs = null;
             gameState.gameMode = 'manual';
 
             if (gameState.timerInterval) clearInterval(gameState.timerInterval);
@@ -1083,6 +1101,7 @@
             gameState.totalQuestions = 1;
             gameState.score = 0;
             gameState.startTime = null;
+            gameState.frozenElapsedMs = null;
             gameState.gameMode = 'normal';
 
             if (elements.fixedSoundBtn) elements.fixedSoundBtn.style.display = 'none';
@@ -1132,7 +1151,11 @@
             clearInterval(gameState.timerInterval);
 
             const score = Math.round(gameState.score);
-            const elapsedMs = Date.now() - gameState.startTime;
+            // El tiempo final es el que se congeló al pulsar "Comprobar", no el que ha
+            // seguido pasando mientras el usuario miraba el resultado antes de "Continuar".
+            const elapsedMs = (gameState.frozenElapsedMs !== null && gameState.frozenElapsedMs !== undefined)
+                ? gameState.frozenElapsedMs
+                : (Date.now() - gameState.startTime);
             lastElapsedSeconds = elapsedMs / 1000;
             const timeStr = formatTime(elapsedMs);
 

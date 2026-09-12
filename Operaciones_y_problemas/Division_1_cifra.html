@@ -149,7 +149,7 @@
             <div class="advice-anim-text">¡Ánimo!</div>
         </div>
         <div class="btn-group">
-            <button class="btn btn-start" onclick="startGame(false)">Comenzar</button>
+            <button class="btn btn-start" onclick="startGame()">Comenzar</button>
             <button class="btn btn-start" style="background:var(--blue-600);" onclick="showManualSetup()">Manual</button>
         </div>
         <div class="start-image-container">
@@ -225,7 +225,6 @@
         <div class="final-message" id="finalMsgEl"></div>
         <div class="btn-group">
             <button class="btn btn-start" onclick="showScreen('screenStart')">Volver al menú</button>
-            <button class="btn btn-start" style="background:var(--blue-600);" onclick="startGame(true)">Entrenamiento infinito</button>
         </div>
         <div class="credit">Creado por Manuel J. Ventura</div>
         <img class="school-logo"
@@ -367,10 +366,10 @@ function generateRandom() {
 // ─── ESTADO ───
 let G = {};
 
-function startGame(isInfinite) {
+function startGame() {
     playSound('tap');
     const { dividend, divisor } = generateRandom();
-    initGame(dividend, divisor, isInfinite, false, 1);
+    initGame(dividend, divisor, false, false, 1);
 }
 
 function showManualSetup() {
@@ -425,7 +424,7 @@ function renderGame() {
 
 function renderProgress() {
     const pt=document.getElementById('progressText'), pb=document.getElementById('progressBar');
-    if(!G.isInfinite&&!G.isManual&&G.totalQuestions>1) {
+    if(!G.isManual&&G.totalQuestions>1) {
         pt.style.display='block'; pb.style.display='block';
         pt.textContent=`${G.questionIndex+1}/${G.totalQuestions}`;
         document.getElementById('progressFill').style.width=`${((G.questionIndex+1)/G.totalQuestions)*100}%`;
@@ -575,10 +574,7 @@ function renderInteract() {
     if(G.feedback) {
         const wrap=document.createElement('div');
         wrap.style.cssText='display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:10px auto;';
-        if(G.isInfinite) {
-            wrap.appendChild(mkBtn('Continuar','btn-success',handleNext));
-            wrap.appendChild(mkBtn('Salir','btn-danger',()=>{playSound('tap');showScreen('screenStart');}));
-        } else if(G.isManual) {
+        if(G.isManual) {
             wrap.appendChild(mkBtn('Nueva','btn-primary',()=>{playSound('tap');showManualSetup();}));
             wrap.appendChild(mkBtn('Inicio','btn-success',()=>{playSound('tap');showScreen('screenStart');}));
         } else {
@@ -682,7 +678,7 @@ function showFinal() {
     if(score===100){playSound('victory');launchConfetti();}else playSound('completed');
 
     // Solo se ofrece guardar en el Hall of Fama en una partida normal (no infinita ni manual).
-    if(!G.isInfinite && !G.isManual) {
+    if(!G.isManual) {
         showSubmitModal(e, score);
     }
 }
