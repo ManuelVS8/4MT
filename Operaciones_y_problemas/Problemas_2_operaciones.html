@@ -208,6 +208,8 @@ h1 { color:var(--blue-dark); font-size:clamp(1.5rem,4.2vw,2.4rem); font-weight:9
 .sol-paso .tag { background:var(--blue-600); color:#fff; font-size:.7rem; border-radius:999px; padding:.12rem .55rem; }
 .sol-final { font-weight:900; color:var(--green-dark); font-size:clamp(1rem,2.8vw,1.2rem); margin-top:.35rem; }
 .solucion-panel.fail .sol-final { color:#a93226; }
+.sol-alt { margin-top:.8rem; padding:.65rem .8rem .35rem; border:2px dashed var(--green); border-radius:12px; background:rgba(255,255,255,.55); }
+.sol-alt-title { font-weight:900; color:var(--blue-700); font-size:clamp(.9rem,2.4vw,1.02rem); margin-bottom:.45rem; }
 
 /* ===== Pantalla Final ===== */
 .results { display:flex; flex-direction:column; align-items:center; justify-content:center; flex:1; gap:1.1rem; padding:1rem; }
@@ -475,6 +477,8 @@ const T = {
     msgIncorrecto1:'✗ Ese plan no resuelve el problema. Vuelve a pensarlo e inténtalo otra vez.',
     msgIncorrecto2:'✗ No era así. Mira la solución con calma.',
     solTitleOk:'✅ ¡Muy bien! Ese es el plan correcto',
+    solTitleAlt:'✅ ¡Muy bien! Has elegido otro camino y también es correcto',
+    solOtraForma:'💡 Otra forma de resolverlo:',
     solTitleFail:'📘 Así se resolvía',
     ocultaLabel:'Pregunta oculta del paso 1:',
     pasoTag:'Paso',
@@ -602,7 +606,7 @@ const PLANTILLAS = [
 {id:'cromos', e:'🃏', s:'sumaDiv', d:['cromos de Marta','cromos de Hugo','álbumes'],
  t:(a,b,c)=>`Marta tiene ${N(a,0)} ${AP('cromos',0)} y Hugo tiene ${N(b,1)} ${AP('cromos',1)}. Los juntan todos y los reparten en ${N(c,2)} ${AP('álbumes',2)}, poniendo el mismo número en cada uno.`,
  p:'¿Cuántos cromos hay en cada álbum?', o:'¿Cuántos cromos tienen entre los dos?', u:'cromos',
- x:{v:()=>rnd(3,12), d:'cromos repetidos de Hugo', t:v=>` Hugo tiene además ${N(v,3)} ${AP('cromos',3)} repetidos.`}},
+ x:{v:()=>rnd(3,12), d:'equipos de los cromos', t:v=>` Los cromos son de ${N(v,3)} ${AP('equipos',3)} distintos.`}},
 {id:'canicasBolsas', e:'⚪', s:'sumaDiv', d:['canicas de Nadia','canicas de Omar','bolsas'],
  t:(a,b,c)=>`Nadia tiene ${N(a,0)} ${AP('canicas',0)} y Omar tiene ${N(b,1)} ${AP('canicas',1)}. Las meten todas juntas en ${N(c,2)} ${AP('bolsas',2)} con la misma cantidad en cada una.`,
  p:'¿Cuántas canicas hay en cada bolsa?', o:'¿Cuántas canicas tienen entre los dos?', u:'canicas',
@@ -707,22 +711,22 @@ const PLANTILLAS = [
  x:{v:()=>rnd(2,8), d:'furgonetas de reparto', t:v=>` El reparto lo hacen ${N(v,3)} ${AP('furgonetas',3)}.`}},
 
 /* ---------- (a − b) × c ---------- */
-{id:'autobusRotos', e:'🚌', s:'restaMult', d:['asientos del autobús','asientos rotos','autobuses alquilados'],
- t:(a,b,c)=>`Un autobús tiene ${N(a,0)} ${AP('asientos',0)}, pero ${N(b,1)} ${AP('asientos',1)} están rotos. El colegio alquila ${N(c,2)} ${AP('autobuses',2)} iguales.`,
- p:'¿Cuántas personas pueden viajar en total?', o:'¿Cuántos asientos se pueden usar en un autobús?', u:'personas',
+{id:'autobusProfes', e:'🚌', s:'restaMult', d:['plazas de cada autobús','plazas para profesores en cada autobús','autobuses alquilados'],
+ t:(a,b,c)=>`Cada autobús tiene ${N(a,0)} ${AP('plazas',0)}, pero ${N(b,1)} ${AP('plazas',1)} se reservan para los profesores. El colegio alquila ${N(c,2)} ${AP('autobuses',2)} iguales.`,
+ p:'¿Cuántos alumnos pueden viajar en total?', o:'¿Cuántas plazas para alumnos hay en un autobús?', u:'alumnos',
  x:{v:()=>rnd(20,90), d:'kilómetros de la excursión', t:v=>` La excursión está a ${N(v,3)} ${AP('kilómetros',3)}.`}},
-{id:'huevosRotos', e:'🥚', s:'restaMult', d:['huevos por huevera','huevos rotos en cada una','hueveras'],
- t:(a,b,c)=>`Cada huevera trae ${N(a,0)} ${AP('huevos',0)}, pero en el viaje se rompen ${N(b,1)} ${AP('huevos',1)} de cada huevera. La tienda recibe ${N(c,2)} ${AP('hueveras',2)}.`,
- p:'¿Cuántos huevos buenos recibe la tienda?', o:'¿Cuántos huevos buenos quedan en una huevera?', u:'huevos',
- x:{v:()=>rnd(2,9), d:'granjas que los envían', t:v=>` Los huevos vienen de ${N(v,3)} ${AP('granjas',3)}.`}},
+{id:'mochilas', e:'🎒', s:'restaMult', d:['euros que cuesta cada mochila','euros de descuento en cada mochila','mochilas que compra el colegio'],
+ t:(a,b,c)=>`Cada mochila cuesta ${N(a,0)} ${AP('€',0)}, pero hoy hay ${N(b,1)} ${AP('€',1)} de descuento en cada una. El colegio compra ${N(c,2)} ${AP('mochilas',2)} iguales.`,
+ p:'¿Cuántos euros paga el colegio en total?', o:'¿Cuántos euros cuesta cada mochila con el descuento?', u:'€',
+ x:{v:()=>rnd(2,5), d:'colores de mochila', t:v=>` Hay mochilas de ${N(v,3)} ${AP('colores',3)} distintos.`}},
 {id:'butacas', e:'🎫', s:'restaMult', d:['butacas de la sala','butacas reservadas','salas del cine'],
  t:(a,b,c)=>`Cada sala del cine tiene ${N(a,0)} ${AP('butacas',0)} y ${N(b,1)} ${AP('butacas',1)} están reservadas para el personal. El cine tiene ${N(c,2)} ${AP('salas',2)} iguales.`,
  p:'¿Cuántas butacas quedan libres en todo el cine?', o:'¿Cuántas butacas quedan libres en una sala?', u:'butacas',
  x:{v:()=>rnd(2,6), d:'películas del día', t:v=>` Hoy se proyectan ${N(v,3)} ${AP('películas',3)}.`}},
-{id:'peces', e:'🐟', s:'restaMult', d:['peces por pecera','peces enfermos por pecera','peceras'],
- t:(a,b,c)=>`En cada pecera hay ${N(a,0)} ${AP('peces',0)}, pero ${N(b,1)} ${AP('peces',1)} de cada pecera están enfermos y se apartan. La tienda tiene ${N(c,2)} ${AP('peceras',2)} iguales.`,
- p:'¿Cuántos peces sanos hay en total?', o:'¿Cuántos peces sanos quedan en una pecera?', u:'peces',
- x:{v:()=>rnd(2,8), d:'litros de agua por pecera', t:v=>` Cada pecera lleva ${N(v,3)} ${AP('litros',3)} de agua.`}},
+{id:'zoo', e:'🦁', s:'restaMult', d:['euros que lleva cada niño','euros de entrada de cada niño','niños de la excursión'],
+ t:(a,b,c)=>`Cada niño lleva ${N(a,0)} ${AP('€',0)} a la excursión al zoo y paga ${N(b,1)} ${AP('€',1)} de entrada. En la excursión van ${N(c,2)} ${AP('niños',2)}.`,
+ p:'¿Cuántos euros les quedan entre todos los niños?', o:'¿Cuántos euros le quedan a cada niño?', u:'€',
+ x:{v:()=>rnd(10,40), d:'jaulas del zoo', t:v=>` El zoo tiene ${N(v,3)} ${AP('jaulas',3)}.`}},
 
 /* ---------- (a × b) ÷ c ---------- */
 {id:'rotuladores', e:'🖍️', s:'multDiv', d:['cajas compradas','rotuladores por caja','clases'],
@@ -840,7 +844,17 @@ PLANTILLAS.forEach(t => { (POR_ESTRUCTURA[t.s] = POR_ESTRUCTURA[t.s] || []).push
 function generarProblema(est, conDistractor){
     const lista = POR_ESTRUCTURA[est];
     const tpl = lista[Math.floor(Math.random() * lista.length)];
-    const g = ESTRUCTURAS[est]();
+    const quiereX = !!(conDistractor && tpl.x);
+
+    /* Todos los datos del problema (y el que sobra) con valores DISTINTOS:
+       así nunca hay dos tarjetas con el mismo número y no cabe confundirlas. */
+    let g, dv = null;
+    for (let intento = 0; intento < 80; intento++) {
+        g = ESTRUCTURAS[est]();
+        dv = quiereX ? tpl.x.v() : null;
+        const todos = quiereX ? g.v.concat(dv) : g.v;
+        if (new Set(todos).size === todos.length) break;
+    }
     const [a,b,c] = g.v;
     const P = {
         id: tpl.id, emoji: tpl.e, est: est,
@@ -850,8 +864,7 @@ function generarProblema(est, conDistractor){
         res: g.res, s1: g.s1, s2: g.s2,
         s1idx: g.s1idx, s2idx: [0,1,2].find(i => !g.s1idx.includes(i))
     };
-    if (conDistractor && tpl.x) {
-        const dv = tpl.x.v();
+    if (quiereX) {
         P.datos.push({v:dv, lab:tpl.x.d});
         P.texto += tpl.x.t(dv);
     }
@@ -1271,13 +1284,71 @@ document.getElementById('resetProbBtn').addEventListener('click', () => {
 /* ====================================================
    COMPROBAR
 ===================================================== */
+/* Se acepta cualquier camino MATEMÁTICAMENTE EQUIVALENTE al previsto
+   (p. ej. 150 − 15 − 20, además de 150 − (15 + 20)).
+   Se valida por identidad algebraica sobre los tres datos, NO por el número final:
+   así una coincidencia numérica casual nunca da por buena una ruta equivocada,
+   y usar el dato que sobra (d3) la invalida siempre. */
+const PRUEBAS_ALG = [[7,11,13], [5,17,23], [19,3,29], [31,37,2]];   // valores de contraste distintos
+
+function aplicarOp(op, x, y){
+    return op === '+' ? x + y : op === '−' ? x - y : op === '×' ? x * y : x / y;
+}
+
+/* Valor de una ruta { p1:{a,op,b}, p2:{a,op,b} } si d0, d1, d2 valieran vals[0..2].
+   Devuelve null si usa algo que no sea d0, d1, d2 o R1 (p. ej. el dato que sobra). */
+function valorRuta(ruta, vals){
+    const dato = (id) => { const m = /^d([0-2])$/.exec(id); return m ? vals[+m[1]] : undefined; };
+    const x1 = dato(ruta.p1.a), y1 = dato(ruta.p1.b);
+    if (x1 === undefined || y1 === undefined) return null;
+    const r1 = aplicarOp(ruta.p1.op, x1, y1);
+    const val2 = (id) => id === 'R1' ? r1 : dato(id);
+    const x2 = val2(ruta.p2.a), y2 = val2(ruta.p2.b);
+    if (x2 === undefined || y2 === undefined) return null;
+    return aplicarOp(ruta.p2.op, x2, y2);
+}
+
+function mismaExpresion(rutaA, rutaB){
+    return PRUEBAS_ALG.every(vals => {
+        const x = valorRuta(rutaA, vals), y = valorRuta(rutaB, vals);
+        if (x === null || y === null || !isFinite(x) || !isFinite(y)) return false;
+        return Math.abs(x - y) <= 1e-9 * Math.max(1, Math.abs(x), Math.abs(y));
+    });
+}
+
+/* Ruta prevista por el generador */
+function rutaCanonica(){
+    const [i, j] = P.s1idx, [op2, , r1First] = P.s2, k = P.s2idx;
+    return {
+        p1: { a:`d${i}`, op:P.s1[1], b:`d${j}` },
+        p2: r1First ? { a:'R1', op:op2, b:`d${k}` } : { a:`d${k}`, op:op2, b:'R1' }
+    };
+}
+
+/* Ruta que ha montado el alumno (lee las tarjetas colocadas y las operaciones) */
+function rutaAlumno(){
+    const id = (paso, pos) => slot(paso, pos).firstElementChild.dataset.id;
+    return {
+        p1: { a:id(1,'A'), op:opsElegidas[1], b:id(1,'B') },
+        p2: { a:id(2,'A'), op:opsElegidas[2], b:id(2,'B') }
+    };
+}
+
+/* Firma de una ruta sin distinguir el orden en + y × (a + b = b + a) */
+function firmaRuta(r){
+    const paso = (p) => (p.op === '+' || p.op === '×') ? [p.a, p.b].sort().join(p.op) : `${p.a}${p.op}${p.b}`;
+    return paso(r.p1) + '|' + paso(r.p2);
+}
+
 function esRutaCorrecta(){
     if (resultados[2] !== P.res) return false;
-    const idsPaso1 = [slot(1,'A').firstElementChild.dataset.id, slot(1,'B').firstElementChild.dataset.id].sort().join(',');
-    const idsPaso2 = [slot(2,'A').firstElementChild.dataset.id, slot(2,'B').firstElementChild.dataset.id].sort().join(',');
-    const esperado1 = [`d${P.s1idx[0]}`, `d${P.s1idx[1]}`].sort().join(',');
-    const esperado2 = [`d${P.s2idx}`, 'R1'].sort().join(',');
-    return idsPaso1 === esperado1 && idsPaso2 === esperado2;
+    return mismaExpresion(rutaAlumno(), rutaCanonica());
+}
+
+/* Los dos cálculos del alumno, en texto: «150 − 15 = 135» */
+function pasosAlumno(){
+    const val = (paso, pos) => slot(paso, pos).firstElementChild.dataset.val;
+    return [1, 2].map(pn => textoOperacion(val(pn,'A'), opsElegidas[pn], val(pn,'B'), resultados[pn]));
 }
 
 document.getElementById('checkBtn').addEventListener('click', () => {
@@ -1288,7 +1359,8 @@ document.getElementById('checkBtn').addEventListener('click', () => {
     if (esRutaCorrecta()) {
         playSound('correcto');
         problemaBloqueado = true;
-        mostrarSolucion(true);
+        const otroCamino = firmaRuta(rutaAlumno()) !== firmaRuta(rutaCanonica());
+        mostrarSolucion(true, otroCamino ? pasosAlumno() : null);
         return;
     }
 
@@ -1307,20 +1379,36 @@ document.getElementById('checkBtn').addEventListener('click', () => {
 
 function textoOperacion(a, op, b, r){ return `${a} ${op} ${b} = ${r}`; }
 
-function mostrarSolucion(acierto){
+/* pasosAlt: null → camino previsto. Si no, los dos cálculos del alumno
+   (acertó por otro camino equivalente): se muestran primero, y el previsto como "otra forma". */
+function mostrarSolucion(acierto, pasosAlt){
     const [a1, op1, b1] = P.s1;
     const r1 = (op1 === '+') ? a1 + b1 : (op1 === '−') ? a1 - b1 : (op1 === '×') ? a1 * b1 : a1 / b1;
     const [op2, otro, r1First] = P.s2;
     const paso2Txt = r1First ? textoOperacion(r1, op2, otro, P.res) : textoOperacion(otro, op2, r1, P.res);
 
+    const paso = (n, txt) => `<div class="sol-paso"><span class="tag">${T.pasoTag} ${n}</span>${txt}</div>`;
+    const previsto = `
+        <div class="sol-oculta">🔎 ${T.ocultaLabel} ${P.oculta}</div>
+        ${paso(1, textoOperacion(a1, op1, b1, r1))}
+        ${paso(2, paso2Txt)}`;
+    const bloqueFinal = `<div class="sol-final">${T.respuestaLabel} ${P.res} ${P.unidad}</div>`;
+
     const panel = document.getElementById('solucionPanel');
     panel.className = 'solucion-panel' + (acierto ? '' : ' fail');
-    panel.innerHTML = `
-        <div class="sol-title">${acierto ? T.solTitleOk : T.solTitleFail}</div>
-        <div class="sol-oculta">🔎 ${T.ocultaLabel} ${P.oculta}</div>
-        <div class="sol-paso"><span class="tag">${T.pasoTag} 1</span>${textoOperacion(a1, op1, b1, r1)}</div>
-        <div class="sol-paso"><span class="tag">${T.pasoTag} 2</span>${paso2Txt}</div>
-        <div class="sol-final">${T.respuestaLabel} ${P.res} ${P.unidad}</div>`;
+    if (pasosAlt) {
+        panel.innerHTML = `
+            <div class="sol-title">${T.solTitleAlt}</div>
+            ${paso(1, pasosAlt[0])}
+            ${paso(2, pasosAlt[1])}
+            ${bloqueFinal}
+            <div class="sol-alt"><div class="sol-alt-title">${T.solOtraForma}</div>${previsto}</div>`;
+    } else {
+        panel.innerHTML = `
+            <div class="sol-title">${acierto ? T.solTitleOk : T.solTitleFail}</div>
+            ${previsto}
+            ${bloqueFinal}`;
+    }
     panel.classList.remove('hidden');
 
     if (!acierto) mostrarMsg(T.msgIncorrecto2, 'error'); else ocultarMsg();
